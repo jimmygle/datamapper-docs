@@ -1,0 +1,337 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+     <title>DataMapper - Getting started with DataMapper</title>
+     <link rel="stylesheet" href="/datamapper-docs/css/site.css" type="text/css" media="screen, projection" />
+     <link rel="stylesheet" href="/datamapper-docs/css/code.css" type="text/css" media="screen, projection" />
+     <!--[if lt IE 7]> <link rel="stylesheet" href="/datamapper-docs/css/ie_hacks.css" type="text/css" media="screen, projection" /> <![endif]-->
+     <link rel="Shortcut Icon" type="image/x-icon" href="/datamapper-docs/favicon.ico" />
+  </head>
+
+  <body id="home">
+
+  <div style="width:100%;background:#d1ecf1;padding:15px;color:#0c5460;text-align:center;font-weight:bold;margin-bottom:20px;">
+    This is a clone of the datamapper docs. Datamapper.org was taken down and redirected around Feb, 2020. I claim no ownership of any of this stuff.
+  </div>
+
+    <div id="content">
+
+      <div id="header">
+                <h1><a href="/datamapper-docs/">DataMapper</a></h1>
+
+        <ul>
+          <li><a href="/datamapper-docs/docs">Documentation</a></li>
+          <li><a href="https://github.com/datamapper/dm-core/wiki">Wiki</a></li>
+          <li><a href="/datamapper-docs/getting-started.html" id="getStarted">Get Started</a></li>
+        </ul>
+
+      </div>
+
+   <h1 id="getting-started-with-datamapper">Getting started with DataMapper</h1>
+
+<p>If you think you might need some help, there’s an active community
+supporting DataMapper through
+<a href="http://groups.google.com/group/datamapper">the mailing list</a> and the
+<a href="http://webchat.freenode.net/?channels=datamapper">#datamapper</a> IRC
+channel on <a href="irc://irc.freenode.net/#datamapper">irc.freenode.net</a>.</p>
+
+<p>So lets imagine we’re setting up some models for a blogging app. We’ll keep it
+nice and simple. The first thing to decide on is what models we want. Post is a
+given. So is Comment. But let’s mix it up and do Category too.</p>
+
+<h2 id="install-an-adapter">Install an Adapter</h2>
+
+<p>First, you will need to install an Adapter, which allows DataMapper to communicate to the Database:</p>
+
+<ul>
+  <li>
+    <p><a href="https://github.com/datamapper/dm-sqlite-adapter">dm-sqlite-adapter</a></p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  # Debian / Ubuntu
+  sudo apt-get install libsqlite3-dev
+
+  # RedHat / Fedora
+  sudo yum install sqlite-devel
+
+  # MacPorts
+  sudo port install sqlite3
+
+  # HomeBrew
+  sudo brew install sqlite
+
+  gem install dm-sqlite-adapter
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p><a href="https://github.com/datamapper/dm-mysql-adapter">dm-mysql-adapter</a></p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  # Debian / Ubuntu
+  sudo apt-get install libmysqlclient-dev
+
+  # RedHat / Fedora
+  sudo yum install mysql-devel
+
+  # MacPorts
+  sudo port install mysql5
+
+  # HomeBrew
+  sudo brew install mysql
+
+  gem install dm-mysql-adapter
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p><a href="https://github.com/datamapper/dm-postgres-adapter">dm-postgres-adapter</a></p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  # Debian / Ubuntu
+  sudo apt-get install libpq-dev
+
+  # RedHat / Fedora
+  sudo yum install postgresql-devel
+
+  # MacPorts
+  sudo port install postgresql91
+
+  # HomeBrew
+  sudo brew install postgresql
+
+  gem install dm-postgres-adapter
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<h2 id="install-datamapper">Install DataMapper</h2>
+
+<p>If you have RubyGems installed, open a Terminal and install a few things.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gem install data_mapper
+</code></pre></div></div>
+
+<p>This will install the following, most commonly used DataMapper gems.</p>
+
+<ul>
+  <li><a href="http://github.com/datamapper/dm-core">dm-core</a></li>
+  <li><a href="http://github.com/datamapper/dm-aggregates">dm-aggregates</a></li>
+  <li><a href="http://github.com/datamapper/dm-constraints">dm-constraints</a></li>
+  <li><a href="http://github.com/datamapper/dm-migrations">dm-migrations</a></li>
+  <li><a href="http://github.com/datamapper/dm-transactions">dm-transactions</a></li>
+  <li><a href="http://github.com/datamapper/dm-serializer">dm-serializer</a></li>
+  <li><a href="http://github.com/datamapper/dm-timestamps">dm-timestamps</a></li>
+  <li><a href="http://github.com/datamapper/dm-validations">dm-validations</a></li>
+  <li><a href="http://github.com/datamapper/dm-types">dm-types</a></li>
+</ul>
+
+<h2 id="require-it-in-your-application">Require it in your application</h2>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s1">'rubygems'</span>
+<span class="nb">require</span> <span class="s1">'data_mapper'</span> <span class="c1"># requires all the gems listed above</span></code></pre></figure>
+
+<h2 id="specify-your-database-connection">Specify your database connection</h2>
+
+<p>You need to make sure to do this before you use your models, i.e. before you actually start accessing the database.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">  <span class="c1"># If you want the logs displayed you have to do this before the call to setup</span>
+  <span class="no">DataMapper</span><span class="o">::</span><span class="no">Logger</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="vg">$stdout</span><span class="p">,</span> <span class="ss">:debug</span><span class="p">)</span>
+
+  <span class="c1"># An in-memory Sqlite3 connection:</span>
+  <span class="no">DataMapper</span><span class="p">.</span><span class="nf">setup</span><span class="p">(</span><span class="ss">:default</span><span class="p">,</span> <span class="s1">'sqlite::memory:'</span><span class="p">)</span>
+
+  <span class="c1"># A Sqlite3 connection to a persistent database</span>
+  <span class="no">DataMapper</span><span class="p">.</span><span class="nf">setup</span><span class="p">(</span><span class="ss">:default</span><span class="p">,</span> <span class="s1">'sqlite:///path/to/project.db'</span><span class="p">)</span>
+
+  <span class="c1"># A MySQL connection:</span>
+  <span class="no">DataMapper</span><span class="p">.</span><span class="nf">setup</span><span class="p">(</span><span class="ss">:default</span><span class="p">,</span> <span class="s1">'mysql://user:password@hostname/database'</span><span class="p">)</span>
+
+  <span class="c1"># A Postgres connection:</span>
+  <span class="no">DataMapper</span><span class="p">.</span><span class="nf">setup</span><span class="p">(</span><span class="ss">:default</span><span class="p">,</span> <span class="s1">'postgres://user:password@hostname/database'</span><span class="p">)</span></code></pre></figure>
+
+<p><strong>Note</strong>: that currently you <strong>must</strong> setup a <code class="highlighter-rouge">:default</code> repository to work
+with DataMapper (and to be able to <a href="/docs/misc.html">use additional differently named
+repositories</a>). This might change in the future.</p>
+
+<h2 id="define-your-models">Define your models</h2>
+
+<p>The Post model is going to need to be persistent, so we’ll include
+<a href="http://rubydoc.info/github/datamapper/dm-core/master/DataMapper/Resource">DataMapper::Resource</a>. The convention with model names is to use the
+singular, not plural version…but that’s just the convention, you can do
+whatever you want.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>         <span class="no">Serial</span>    <span class="c1"># An auto-increment integer key</span>
+  <span class="n">property</span> <span class="ss">:title</span><span class="p">,</span>      <span class="no">String</span>    <span class="c1"># A varchar type string, for short strings</span>
+  <span class="n">property</span> <span class="ss">:body</span><span class="p">,</span>       <span class="no">Text</span>      <span class="c1"># A text block, for longer string data.</span>
+  <span class="n">property</span> <span class="ss">:created_at</span><span class="p">,</span> <span class="no">DateTime</span>  <span class="c1"># A DateTime, for any date you might like.</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">Comment</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>         <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:posted_by</span><span class="p">,</span>  <span class="no">String</span>
+  <span class="n">property</span> <span class="ss">:email</span><span class="p">,</span>      <span class="no">String</span>
+  <span class="n">property</span> <span class="ss">:url</span><span class="p">,</span>        <span class="no">String</span>
+  <span class="n">property</span> <span class="ss">:body</span><span class="p">,</span>       <span class="no">Text</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">Category</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>         <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:name</span><span class="p">,</span>       <span class="no">String</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>The above example is simplified, but you can also specify more options such as
+constraints for your properties.  DataMapper supports a lot of different
+<a href="/docs/properties.html">property</a> types natively, and more through
+<a href="/docs/dm_more/types.html">dm-types</a>.</p>
+
+<p>An important thing to note is that every model <em>must</em> have a key in
+order to be valid. If a model has no key, there’s no way to identify a
+resource and thus no way to update its persistent state within the
+backend datastore. DataMapper will raise a <code class="highlighter-rouge">DataMapper::IncompleteModelError</code>
+when trying to <code class="highlighter-rouge">auto_migrate!</code> a model that has no key declared.</p>
+
+<p>Have a look at <a href="/docs/properties.html">property</a> to learn about the different
+ways of declaring keys for your models.</p>
+
+<h2 id="associations">Associations</h2>
+
+<p>Ideally, these declarations should be done inside your class definition with the
+properties and things, but for demonstration purposes, we will just
+re-open the classes.</p>
+
+<h3 id="one-to-many">One To Many</h3>
+
+<p>Posts can have comments, so we’ll need to setup a simple
+<a href="/docs/associations.html#has_n_and_belongs_to_or_onetomany">one-to-many</a> association
+between then:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">class</span> <span class="nc">Post</span>
+  <span class="n">has</span> <span class="n">n</span><span class="p">,</span> <span class="ss">:comments</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">Comment</span>
+  <span class="n">belongs_to</span> <span class="ss">:post</span>
+<span class="k">end</span></code></pre></figure>
+
+<h3 id="has-and-belongs-to-many">Has and belongs to many</h3>
+
+<p>Categories can have many Posts and Posts can have many
+Categories, so we’ll need a
+<a href="/docs/associations.html#has_n_through_or_onetomanythrough">many to many</a> relationship
+commonly referred to “has and belongs to many”. We’ll setup a quick model to
+wrap our join table between the two so that we can record a little bit of
+meta-data about when the post was categorized into a category.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">class</span> <span class="nc">Categorization</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>         <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:created_at</span><span class="p">,</span> <span class="no">DateTime</span>
+
+  <span class="n">belongs_to</span> <span class="ss">:category</span>
+  <span class="n">belongs_to</span> <span class="ss">:post</span>
+<span class="k">end</span>
+
+<span class="c1"># Now we re-open our Post and Categories classes to define associations</span>
+<span class="k">class</span> <span class="nc">Post</span>
+  <span class="n">has</span> <span class="n">n</span><span class="p">,</span> <span class="ss">:categorizations</span>
+  <span class="n">has</span> <span class="n">n</span><span class="p">,</span> <span class="ss">:categories</span><span class="p">,</span> <span class="ss">:through</span> <span class="o">=&gt;</span> <span class="ss">:categorizations</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">Category</span>
+  <span class="n">has</span> <span class="n">n</span><span class="p">,</span> <span class="ss">:categorizations</span>
+  <span class="n">has</span> <span class="n">n</span><span class="p">,</span> <span class="ss">:posts</span><span class="p">,</span>      <span class="ss">:through</span> <span class="o">=&gt;</span> <span class="ss">:categorizations</span>
+<span class="k">end</span></code></pre></figure>
+
+<h2 id="finalize-models">Finalize Models</h2>
+
+<p>After declaring all of the models, you should finalize them:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="no">DataMapper</span><span class="p">.</span><span class="nf">finalize</span></code></pre></figure>
+
+<p>This checks the models for validity and initializes all properties associated
+with relationships.  It is likely if you use a web-framework such as merb or
+rails, this will already be done for you. In case you do not, be sure to call it
+at an appropriate time.</p>
+
+<p>DataMapper allows the use of natural primary keys, composite primary keys and
+other complexities.  Because of this, when a model is declared with a
+<code class="highlighter-rouge">belongs_to</code> relationship the property to hold the foreign key cannot be
+initialized immediately.  It can only be initialized when the parent model has
+also been declared.  This is hard for DataMapper to determine, due to the
+dynamic nature of ruby, so it is left up to developers to determine the
+appropriate time.</p>
+
+<p>In general, you want to call <code class="highlighter-rouge">finalize</code> <em>before</em> your application starts
+accessing the models.</p>
+
+<h2 id="set-up-your-database-tables">Set up your database tables</h2>
+
+<p>Relational Databases work with pre-defined tables. To be able to create the tables in the
+underlying storage, you need to have <code class="highlighter-rouge">dm-migrations</code> loaded.</p>
+
+<p><strong>Note:</strong> If you’ve been following this instructions and did <code class="highlighter-rouge">require 'data_mapper'</code>,
+you can safely skip the following require statement as it has already
+been done for you.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="nb">require</span>  <span class="s1">'dm-migrations'</span></code></pre></figure>
+
+<p>Once <code class="highlighter-rouge">dm-migrations</code> is loaded, you can create the tables by issuing the following command:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="no">DataMapper</span><span class="p">.</span><span class="nf">auto_migrate!</span></code></pre></figure>
+
+<p>This will issue the necessary <code class="highlighter-rouge">CREATE</code> statements (<code class="highlighter-rouge">DROP</code>ing the table first, if
+it exists) to define each storage according to their properties. After
+<code class="highlighter-rouge">auto_migrate!</code> has been run, the database should be in a pristine state.  All
+the tables will be empty and match the model definitions.</p>
+
+<p>This wipes out existing data, so you could also do:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="no">DataMapper</span><span class="p">.</span><span class="nf">auto_upgrade!</span></code></pre></figure>
+
+<p>This tries to make the schema match the model.  It will <code class="highlighter-rouge">CREATE</code> new tables, and
+add columns to existing tables.  It won’t change any existing columns though
+(say, to add a <code class="highlighter-rouge">NOT NULL</code> constraint) and it doesn’t drop any columns.  Both these commands
+also can be used on an individual model (e.g. <code class="highlighter-rouge">Post.auto_migrate!</code>)</p>
+
+<h2 id="create-your-first-resource">Create your first resource</h2>
+
+<p>Using DataMapper to <a href="/docs/create_and_destroy.html#creating">create</a> a resource (A
+resource is an instance of a model) is simple</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># create makes the resource immediately</span>
+<span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span>
+  <span class="ss">:title</span>      <span class="o">=&gt;</span> <span class="s2">"My first DataMapper post"</span><span class="p">,</span>
+  <span class="ss">:body</span>       <span class="o">=&gt;</span> <span class="s2">"A lot of text ..."</span><span class="p">,</span>
+  <span class="ss">:created_at</span> <span class="o">=&gt;</span> <span class="no">Time</span><span class="p">.</span><span class="nf">now</span>
+<span class="p">)</span>
+
+<span class="c1"># Or new gives you it back unsaved, for more operations</span>
+<span class="vi">@post</span> <span class="o">=</span> <span class="no">Post</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="ss">:title</span> <span class="o">=&gt;</span> <span class="o">...</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="vi">@post</span><span class="p">.</span><span class="nf">save</span>                           <span class="c1"># persist the resource</span></code></pre></figure>
+
+<p>Both are equivalent.  The first thing to notice is we didn’t specify the
+auto-increment key.  This is because the data-store will provide that value for
+us, and should make sure it’s unique, too.  Also, note that while the property
+is a <code class="highlighter-rouge">DateTime</code>, we can pass it a <code class="highlighter-rouge">Time</code> instance, and it will convert (or
+typecast) the value for us, before it saves it to the data-store.  Any
+properties which are not specified in the hash will take their default values in
+the data-store.</p>
+
+
+
+            <div id="footer">
+        <p>Copyright Sam Smoot 2007, 2008</p>
+        <p>Copyright Dan Kubb 2009-2012</p>
+        <p>Web Design by <a href="http://www.mr-eel.com/">Luke Matthew Sutton</a> - Community Maintained</p>
+      </div>
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+     <title>DataMapper - Properties</title>
+     <link rel="stylesheet" href="/datamapper-docs/css/site.css" type="text/css" media="screen, projection" />
+     <link rel="stylesheet" href="/datamapper-docs/css/code.css" type="text/css" media="screen, projection" />
+     <!--[if lt IE 7]> <link rel="stylesheet" href="/datamapper-docs/css/ie_hacks.css" type="text/css" media="screen, projection" /> <![endif]-->
+     <link rel="Shortcut Icon" type="image/x-icon" href="/datamapper-docs/favicon.ico" />
+  </head>
+
+  <body id="home">
+
+  <div style="width:100%;background:#d1ecf1;padding:15px;color:#0c5460;text-align:center;font-weight:bold;margin-bottom:20px;">
+    This is a clone of the datamapper docs. Datamapper.org was taken down and redirected around Feb, 2020. I claim no ownership of any of this stuff.
+  </div>
+
+    <div id="content">
+
+      <div id="header">
+                <h1><a href="/datamapper-docs/">DataMapper</a></h1>
+
+        <ul>
+          <li><a href="/datamapper-docs/docs">Documentation</a></li>
+          <li><a href="https://github.com/datamapper/dm-core/wiki">Wiki</a></li>
+          <li><a href="/datamapper-docs/getting-started.html" id="getStarted">Get Started</a></li>
+        </ul>
+
+      </div>
+
+   <h1 id="properties">Properties</h1>
+
+<p>A model’s properties are not introspected from the fields in the data-store; In
+fact the reverse happens. You declare the properties for a model inside its
+class definition, which is then used to generate the fields in the data-store.</p>
+
+<p>This has a few advantages. First it means that a model’s properties are
+documented in the model itself, not a migration or XML file. If you’ve ever been
+annoyed at having to look in a schema file to see the list of properties and
+types for a model, you’ll find this particularly useful. There’s no need for a
+special <code class="highlighter-rouge">annotate</code> rake task either.</p>
+
+<p>Second, it lets you limit access to properties using Ruby’s access semantics.
+Properties can be declared public, private or protected. They are public by
+default.</p>
+
+<p>Finally, since DataMapper only cares about properties explicitly defined in your
+models, DataMapper plays well with legacy data-stores and shares them easily
+with other applications.</p>
+
+<h2 id="declaring-properties">Declaring Properties</h2>
+
+<p>Inside your class, call the property method for each property you want to add.
+The only two required arguments are the name and type, everything else is
+optional.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>        <span class="no">Serial</span>                       <span class="c1"># primary serial key</span>
+  <span class="n">property</span> <span class="ss">:title</span><span class="p">,</span>     <span class="no">String</span><span class="p">,</span>  <span class="ss">:required</span> <span class="o">=&gt;</span> <span class="kp">true</span>   <span class="c1"># Cannot be nil</span>
+  <span class="n">property</span> <span class="ss">:published</span><span class="p">,</span> <span class="no">Boolean</span><span class="p">,</span> <span class="ss">:default</span>  <span class="o">=&gt;</span> <span class="kp">false</span>  <span class="c1"># Default value for new records is false</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="keys">Keys</h2>
+
+<h3 id="primary-keys">Primary Keys</h3>
+
+<p>Primary keys are not automatically created for you, as with ActiveRecord. You
+MUST configure at least one key property on your data-store. More often than
+not, you’ll want an auto-incrementing integer as a primary key, so DM has a
+shortcut:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre>  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span> <span class="no">Serial</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h3 id="natural-keys">Natural Keys</h3>
+
+<p>Anything can be a key. Just pass <code class="highlighter-rouge">:key =&gt; true</code> as an option during the property
+definition. Most commonly, you’ll see String as a natural key:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre>  <span class="n">property</span> <span class="ss">:slug</span><span class="p">,</span> <span class="no">String</span><span class="p">,</span> <span class="ss">:key</span> <span class="o">=&gt;</span> <span class="kp">true</span>  <span class="c1"># any Type is available here</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Natural Keys are protected against mass-assignment, so their <code class="highlighter-rouge">setter=</code> will need
+to be called individually if you’re looking to set them.</p>
+
+<p><em>Fair warning:</em> Using Boolean, Discriminator, and the time related types as keys
+may cause your DBA to hunt you down and “educate” you. DM will not be held
+responsible for any injuries or death that may result.</p>
+
+<h3 id="composite-keys">Composite Keys</h3>
+
+<p>You can have more than one property in the primary key:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:old_id</span><span class="p">,</span> <span class="no">Integer</span><span class="p">,</span> <span class="ss">:key</span> <span class="o">=&gt;</span> <span class="kp">true</span>
+  <span class="n">property</span> <span class="ss">:new_id</span><span class="p">,</span> <span class="no">Integer</span><span class="p">,</span> <span class="ss">:key</span> <span class="o">=&gt;</span> <span class="kp">true</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="setting-default-values">Setting default values</h2>
+
+<p>Defaults can be set via the <code class="highlighter-rouge">:default</code> key for a property. They can be static
+values, such as <code class="highlighter-rouge">12</code> or <code class="highlighter-rouge">"Hello"</code>, but DataMapper also offers the ability to use
+a Proc to set the default value. The property becomes whatever the Proc returns,
+which will be called the first time the property is used without having first
+set a value. The Proc itself receives two arguments: The resource the property
+is being set on, and the property itself.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Image</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>     <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:path</span><span class="p">,</span>   <span class="no">FilePath</span><span class="p">,</span> <span class="ss">:required</span> <span class="o">=&gt;</span> <span class="kp">true</span>
+  <span class="n">property</span> <span class="ss">:md5sum</span><span class="p">,</span> <span class="no">String</span><span class="p">,</span>   <span class="ss">:length</span> <span class="o">=&gt;</span> <span class="mi">32</span><span class="p">,</span> <span class="ss">:default</span> <span class="o">=&gt;</span> <span class="nb">lambda</span> <span class="p">{</span> <span class="o">|</span><span class="n">r</span><span class="p">,</span> <span class="nb">p</span><span class="o">|</span> <span class="no">Digest</span><span class="o">::</span><span class="no">MD5</span><span class="p">.</span><span class="nf">hexdigest</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="nf">path</span><span class="p">.</span><span class="nf">read</span><span class="p">)</span> <span class="k">if</span> <span class="n">r</span><span class="p">.</span><span class="nf">path</span> <span class="p">}</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>When creating the resource, or the first time the <code class="highlighter-rouge">md5sum</code> property is accessed,
+it will be set to the hex digest of the file referred to by <code class="highlighter-rouge">path</code>.</p>
+
+<p><em>Fair Warning</em>: A property default must <em>not</em> refer to the value of the property
+it is about to set, or there will be an infinite loop.</p>
+
+<h2 id="setting-default-options">Setting default options</h2>
+
+<p>If you find that you’re setting the same default options over and over
+again, you can specify them once and have them applied to all properties
+you add to your models.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="code"><pre><span class="c1"># set all String properties to have a default length of 255</span>
+<span class="no">DataMapper</span><span class="o">::</span><span class="no">Property</span><span class="o">::</span><span class="no">String</span><span class="p">.</span><span class="nf">length</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
+
+<span class="c1"># set all Boolean properties to not allow nil (force true or false)</span>
+<span class="no">DataMapper</span><span class="o">::</span><span class="no">Property</span><span class="o">::</span><span class="no">Boolean</span><span class="p">.</span><span class="nf">allow_nil</span><span class="p">(</span><span class="kp">false</span><span class="p">)</span>
+
+<span class="c1"># set all properties to be required by default</span>
+<span class="no">DataMapper</span><span class="o">::</span><span class="no">Property</span><span class="p">.</span><span class="nf">required</span><span class="p">(</span><span class="kp">true</span><span class="p">)</span>
+
+<span class="c1"># turn off auto-validation for all properties by default</span>
+<span class="no">DataMapper</span><span class="o">::</span><span class="no">Property</span><span class="p">.</span><span class="nf">auto_validation</span><span class="p">(</span><span class="kp">false</span><span class="p">)</span>
+
+<span class="c1"># set all mutator methods to be private by default</span>
+<span class="no">DataMapper</span><span class="o">::</span><span class="no">Property</span><span class="p">.</span><span class="nf">writer</span><span class="p">(</span><span class="ss">:private</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>You can of course still override these defaults by specifying any
+option explicitly when defining a specific property.</p>
+
+<h2 id="lazy-loading">Lazy Loading</h2>
+
+<p>Properties can be configured to be lazy loaded. A lazily loaded property is not
+requested from the data-store by default. Instead it is only loaded when its
+accessor is called for the first time. This means you can stop default queries
+from being greedy, a particular problem with text fields. Text fields are lazily
+loaded by default, which you can over-ride if you need to.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>    <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:title</span><span class="p">,</span> <span class="no">String</span>
+  <span class="n">property</span> <span class="ss">:body</span><span class="p">,</span>  <span class="no">Text</span>                    <span class="c1"># Is lazily loaded by default</span>
+  <span class="n">property</span> <span class="ss">:notes</span><span class="p">,</span> <span class="no">Text</span><span class="p">,</span>   <span class="ss">:lazy</span> <span class="o">=&gt;</span> <span class="kp">false</span>  <span class="c1"># Isn't lazy, will load by default</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Lazy Loading can also be done via contexts, which let you group lazily loaded
+properties together, so that when one is fetched, all the associated ones will
+be as well, cutting down on trips to the data-store.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>       <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:title</span><span class="p">,</span>    <span class="no">String</span>
+  <span class="n">property</span> <span class="ss">:subtitle</span><span class="p">,</span> <span class="no">String</span>   <span class="ss">:lazy</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="ss">:show</span> <span class="p">]</span>
+  <span class="n">property</span> <span class="ss">:body</span><span class="p">,</span>     <span class="no">Text</span>     <span class="ss">:lazy</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="ss">:show</span> <span class="p">]</span>
+  <span class="n">property</span> <span class="ss">:views</span><span class="p">,</span>    <span class="no">Integer</span><span class="p">,</span> <span class="ss">:lazy</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="ss">:show</span> <span class="p">]</span>
+  <span class="n">property</span> <span class="ss">:summary</span><span class="p">,</span>  <span class="no">Text</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>In this example, only the title (and the id, of course) will be loaded from the
+data-store on a <code class="highlighter-rouge">Post.all</code>. But as soon as the value for subtitle, body or
+views are called, all three will be loaded at once, since they’re members of the
+<code class="highlighter-rouge">:show</code> group. The summary property on the other hand, will only be fetched when
+it is asked for.</p>
+
+<h2 id="available-types">Available Types</h2>
+
+<p>DM-Core supports the following ‘primitive’ data-types.</p>
+
+<ul>
+  <li>Boolean</li>
+  <li>String (default length limit of 50 characters)</li>
+  <li>Text (defaults to lazy loading and length limit of 65535 characters)</li>
+  <li>Float</li>
+  <li>Integer</li>
+  <li>Decimal</li>
+  <li>DateTime, Date, Time</li>
+  <li>Object, (marshalled)</li>
+  <li>Discriminator</li>
+  <li>Binary (inherits default length limit of 50 characters from String)</li>
+</ul>
+
+<p>If you include DM-Types, the following data-types are supported:</p>
+
+<p>You are encouraged to have a quick glance at the implementation of the
+various properties below. It’s really easy to create a DataMapper
+property that encapsulates data that is suitable for use in high level
+application code while at the same time being able to be persisted in
+all kinds of datastores.</p>
+
+<ul>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/api_key.rb">APIKey</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/bcrypt_hash.rb">BCryptHash</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/comma_separated_list.rb">CommaSeparatedList</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/csv.rb">Csv</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/enum.rb">Enum</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/epoch_time.rb">EpochTime</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/file_path.rb">FilePath</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/flag.rb">Flag</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/ip_address.rb">IPAddress</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/json.rb">Json</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/paranoid_boolean.rb">ParanoidBoolean</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/paranoid_datetime.rb">ParanoidDateTme</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/regexp.rb">Regexp</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/slug.rb">Slug</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/uri.rb">URI</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/uuid.rb">UUID</a></li>
+  <li><a href="https://github.com/datamapper/dm-types/blob/master/lib/dm-types/yaml.rb">Yaml</a></li>
+</ul>
+
+<h2 id="limiting-access">Limiting Access</h2>
+
+<p>Access for properties is defined using the same semantics as Ruby. Accessors are
+public by default, but you can declare them as private or protected if you need
+to. You can set access using the <code class="highlighter-rouge">:accessor</code> option. For demonstration, we’ll
+reopen our Post class.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="n">property</span> <span class="ss">:title</span><span class="p">,</span> <span class="no">String</span><span class="p">,</span> <span class="ss">:accessor</span> <span class="o">=&gt;</span> <span class="ss">:private</span>    <span class="c1"># Both reader and writer are private</span>
+  <span class="n">property</span> <span class="ss">:body</span><span class="p">,</span>  <span class="no">Text</span><span class="p">,</span>   <span class="ss">:accessor</span> <span class="o">=&gt;</span> <span class="ss">:protected</span>  <span class="c1"># Both reader and writer are protected</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>You also have more fine grained control over how you declare access. You can,
+for example, have a public reader and private writer by using the <code class="highlighter-rouge">:writer</code> and
+<code class="highlighter-rouge">:reader</code> options. (Remember, the default is Public)</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="n">property</span> <span class="ss">:title</span><span class="p">,</span> <span class="no">String</span><span class="p">,</span> <span class="ss">:writer</span> <span class="o">=&gt;</span> <span class="ss">:private</span>    <span class="c1"># Only writer is private</span>
+  <span class="n">property</span> <span class="ss">:tags</span><span class="p">,</span>  <span class="no">String</span><span class="p">,</span> <span class="ss">:reader</span> <span class="o">=&gt;</span> <span class="ss">:protected</span>  <span class="c1"># Only reader is protected</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="over-riding-accessors">Over-riding Accessors</h2>
+
+<p>When a property has declared accessors for getting and setting, its values are
+added to the model. Just like using <code class="highlighter-rouge">attr_accessor</code>, you can over-ride these
+with your own custom accessors. It’s a simple matter of adding an accessor after
+the property declaration. Reopening the Post class….</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="n">property</span> <span class="ss">:slug</span><span class="p">,</span> <span class="no">String</span>
+
+  <span class="k">def</span> <span class="nf">slug</span><span class="o">=</span><span class="p">(</span><span class="n">new_slug</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="no">ArgumentError</span> <span class="k">if</span> <span class="n">new_slug</span> <span class="o">!=</span> <span class="s1">'DataMapper is Awesome'</span>
+    <span class="k">super</span>  <span class="c1"># use original method instead of accessing @ivar directly</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+
+
+            <div id="footer">
+        <p>Copyright Sam Smoot 2007, 2008</p>
+        <p>Copyright Dan Kubb 2009-2012</p>
+        <p>Web Design by <a href="http://www.mr-eel.com/">Luke Matthew Sutton</a> - Community Maintained</p>
+      </div>
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+     <title>DataMapper - Working with Legacy Schemas</title>
+     <link rel="stylesheet" href="/datamapper-docs/css/site.css" type="text/css" media="screen, projection" />
+     <link rel="stylesheet" href="/datamapper-docs/css/code.css" type="text/css" media="screen, projection" />
+     <!--[if lt IE 7]> <link rel="stylesheet" href="/datamapper-docs/css/ie_hacks.css" type="text/css" media="screen, projection" /> <![endif]-->
+     <link rel="Shortcut Icon" type="image/x-icon" href="/datamapper-docs/favicon.ico" />
+  </head>
+
+  <body id="home">
+
+  <div style="width:100%;background:#d1ecf1;padding:15px;color:#0c5460;text-align:center;font-weight:bold;margin-bottom:20px;">
+    This is a clone of the datamapper docs. Datamapper.org was taken down and redirected around Feb, 2020. I claim no ownership of any of this stuff.
+  </div>
+
+    <div id="content">
+
+      <div id="header">
+                <h1><a href="/datamapper-docs/">DataMapper</a></h1>
+
+        <ul>
+          <li><a href="/datamapper-docs/docs">Documentation</a></li>
+          <li><a href="https://github.com/datamapper/dm-core/wiki">Wiki</a></li>
+          <li><a href="/datamapper-docs/getting-started.html" id="getStarted">Get Started</a></li>
+        </ul>
+
+      </div>
+
+   <h1 id="working-with-legacy-schemas">Working with Legacy Schemas</h1>
+
+<p>DataMapper has quite a few features and plugins which are useful for working
+with legacy schemas. We’re going to introduce the feature available in the core
+first, before moving on to plugins. Note that whilst the title is “Working with Legacy Schemas”,
+really this applies to any situation where there is no control over the
+‘table’ in the data-store. These features could just as easily be used to
+modify the fields returned by a RESTful webservice adapter, for example.</p>
+
+<h2 id="small-tweaks">Small Tweaks</h2>
+
+<p>If the number of modifications are small—just one table or a few
+properties—it is probably easiest to modify the properties and table names
+directly. This can be accomplished using the <code class="highlighter-rouge">:field</code> option for properties,
+<code class="highlighter-rouge">:child_key</code> (or <code class="highlighter-rouge">:target</code>) for relationships, and manipulation of
+<code class="highlighter-rouge">storage_names[]</code> for models.  In all the following examples, the use of the
+<code class="highlighter-rouge">:legacy</code> repository name assumes that it is some secondary repository that
+should behave in the special manner.  If it is the main database the application
+will be interacting with, <code class="highlighter-rouge">:default</code> makes a much more sensible choice.
+Note that for the below snippet to work, you need to have have the
+<code class="highlighter-rouge">:legacy</code> repository set up properly.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="c1"># set the storage name for the :legacy repository</span>
+  <span class="n">storage_names</span><span class="p">[</span><span class="ss">:legacy</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'tblPost'</span>
+
+  <span class="c1"># use the datastore's 'pid' field for the id property.</span>
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span> <span class="no">Serial</span><span class="p">,</span> <span class="ss">:field</span> <span class="o">=&gt;</span> <span class="s1">'pid'</span>
+
+  <span class="c1"># use a property called 'uid' as the child key (the foreign key)</span>
+  <span class="n">belongs_to</span> <span class="ss">:user</span><span class="p">,</span> <span class="ss">:child_key</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="ss">:uid</span> <span class="p">]</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="changing-behaviour">Changing Behaviour</h2>
+
+<p>With one or two models, it is quite possible to tweak properties and models
+using <code class="highlighter-rouge">:field</code> and <code class="highlighter-rouge">storage_names</code>. When there is a whole repository to rename,
+naming conventions are an alternative. These apply to all the tables in the
+repository. Naming conventions should be applied before the model is used as
+the table name gets frozen when it is first used. DataMapper comes with a
+number of naming conventions and custom ones can be defined:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+</pre></td><td class="code"><pre><span class="c1"># the DataMapper model</span>
+<span class="k">class</span> <span class="nc">Example</span><span class="o">::</span><span class="no">PostModel</span>
+<span class="k">end</span>
+
+<span class="c1"># this is the default</span>
+<span class="no">DataMapper</span><span class="p">.</span><span class="nf">repository</span><span class="p">(</span><span class="ss">:legacy</span><span class="p">).</span><span class="nf">adapter</span><span class="p">.</span><span class="nf">resource_naming_convention</span> <span class="o">=</span>
+  <span class="no">DataMapper</span><span class="o">::</span><span class="no">NamingConventions</span><span class="o">::</span><span class="no">Resource</span><span class="o">::</span><span class="no">UnderscoredAndPluralized</span>
+<span class="no">Example</span><span class="o">::</span><span class="no">PostModel</span><span class="p">.</span><span class="nf">storage_name</span><span class="p">(</span><span class="ss">:legacy</span><span class="p">)</span>
+<span class="c1"># =&gt; example_post_models</span>
+
+<span class="c1"># underscored</span>
+<span class="no">DataMapper</span><span class="p">.</span><span class="nf">repository</span><span class="p">(</span><span class="ss">:legacy</span><span class="p">).</span><span class="nf">adapter</span><span class="p">.</span><span class="nf">resource_naming_convention</span> <span class="o">=</span>
+  <span class="no">DataMapper</span><span class="o">::</span><span class="no">NamingConventions</span><span class="o">::</span><span class="no">Resource</span><span class="o">::</span><span class="no">Underscored</span>
+<span class="no">Example</span><span class="o">::</span><span class="no">PostModel</span><span class="p">.</span><span class="nf">storage_name</span><span class="p">(</span><span class="ss">:legacy</span><span class="p">)</span>
+<span class="c1"># =&gt; example/post_models</span>
+
+<span class="c1"># without the module name</span>
+<span class="no">DataMapper</span><span class="p">.</span><span class="nf">repository</span><span class="p">(</span><span class="ss">:legacy</span><span class="p">).</span><span class="nf">adapter</span><span class="p">.</span><span class="nf">resource_naming_convention</span> <span class="o">=</span>
+  <span class="no">DataMapper</span><span class="o">::</span><span class="no">NamingConventions</span><span class="o">::</span><span class="no">Resource</span><span class="o">::</span><span class="no">UnderscoredAndPluralizedWithoutModule</span>
+<span class="no">Example</span><span class="o">::</span><span class="no">PostModel</span><span class="p">.</span><span class="nf">storage_name</span><span class="p">(</span><span class="ss">:legacy</span><span class="p">)</span>
+<span class="c1"># =&gt; post_models</span>
+
+<span class="c1"># custom conventions can be defined using procs, or any module which</span>
+<span class="c1"># responds to #call. They are passed the name of the model, as a string.</span>
+<span class="k">module</span> <span class="nn">ResourceNamingConvention</span>
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">call</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+    <span class="s1">'tbl'</span> <span class="o">+</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Inflector</span><span class="p">.</span><span class="nf">classify</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="no">DataMapper</span><span class="p">.</span><span class="nf">repository</span><span class="p">(</span><span class="ss">:legacy</span><span class="p">).</span><span class="nf">adapter</span><span class="p">.</span><span class="nf">resource_naming_convention</span> <span class="o">=</span>
+  <span class="no">ResourceNamingConvention</span>
+<span class="no">Example</span><span class="o">::</span><span class="no">PostModel</span><span class="p">.</span><span class="nf">storage_name</span><span class="p">(</span><span class="ss">:legacy</span><span class="p">)</span>
+<span class="c1"># =&gt; 'tblExample::PostModel'</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>For field names, use the <code class="highlighter-rouge">field_naming_convention</code> menthod. Field naming
+conventions work in a similar manner, except the <code class="highlighter-rouge">#call</code> function is passed the
+property name.</p>
+
+
+            <div id="footer">
+        <p>Copyright Sam Smoot 2007, 2008</p>
+        <p>Copyright Dan Kubb 2009-2012</p>
+        <p>Web Design by <a href="http://www.mr-eel.com/">Luke Matthew Sutton</a> - Community Maintained</p>
+      </div>
+
+    </div>
+  </body>
+</html>

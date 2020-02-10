@@ -1,0 +1,657 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+     <title>DataMapper - Why DataMapper?</title>
+     <link rel="stylesheet" href="/datamapper-docs/css/site.css" type="text/css" media="screen, projection" />
+     <link rel="stylesheet" href="/datamapper-docs/css/code.css" type="text/css" media="screen, projection" />
+     <!--[if lt IE 7]> <link rel="stylesheet" href="/datamapper-docs/css/ie_hacks.css" type="text/css" media="screen, projection" /> <![endif]-->
+     <link rel="Shortcut Icon" type="image/x-icon" href="/datamapper-docs/favicon.ico" />
+  </head>
+
+  <body id="home">
+
+  <div style="width:100%;background:#d1ecf1;padding:15px;color:#0c5460;text-align:center;font-weight:bold;margin-bottom:20px;">
+    This is a clone of the datamapper docs. Datamapper.org was taken down and redirected around Feb, 2020. I claim no ownership of any of this stuff.
+  </div>
+
+    <div id="content">
+
+      <div id="header">
+                <h1><a href="/datamapper-docs/">DataMapper</a></h1>
+
+        <ul>
+          <li><a href="/datamapper-docs/docs">Documentation</a></li>
+          <li><a href="https://github.com/datamapper/dm-core/wiki">Wiki</a></li>
+          <li><a href="/datamapper-docs/getting-started.html" id="getStarted">Get Started</a></li>
+        </ul>
+
+      </div>
+
+   <h1 id="why-datamapper">Why DataMapper?</h1>
+
+<p>DataMapper differentiates itself from other Ruby Object/Relational Mappers in a
+number of ways:</p>
+
+<h2 id="one-api-for-a-variety-of-datastores">One API for a variety of datastores</h2>
+
+<p>DataMapper comes with the ability to use the same API to talk to a
+multitude of different datastores. There are adapters for the usual
+RDBMS suspects, NoSQL stores, various file formats and even some popular
+webservices.</p>
+
+<p>There’s a probably incomplete list of available datamapper adapters on
+the <a href="http://github.com/datamapper/dm-core/wiki/Adapters">github wiki</a>
+with new ones getting implemented regularly. A quick
+<a href="http://github.com/search?q=dm+adapter&amp;type=Everything&amp;repo=&amp;langOverride=&amp;start_value=1">github search</a>
+should give you further hints on what’s currently available.</p>
+
+<h2 id="plays-well-with-others">Plays Well With Others</h2>
+
+<p>With DataMapper you define your mappings in your model. Your data-store can
+develop independently of your models using Migrations.</p>
+
+<p>To support data-stores which you don’t have the ability to manage yourself, it’s
+simply a matter of telling DataMapper where to look. This makes DataMapper
+a good choice when <a href="/docs/legacy.html">Working with legacy databases</a></p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="c1"># set the storage name for the :legacy repository</span>
+  <span class="n">storage_names</span><span class="p">[</span><span class="ss">:legacy</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'tblPost'</span>
+
+  <span class="c1"># use the datastore's 'pid' field for the id property.</span>
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span> <span class="no">Serial</span><span class="p">,</span> <span class="ss">:field</span> <span class="o">=&gt;</span> <span class="ss">:pid</span>
+
+  <span class="c1"># use a property called 'uid' as the child key (the foreign key)</span>
+  <span class="n">belongs_to</span> <span class="ss">:user</span><span class="p">,</span> <span class="ss">:child_key</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="ss">:uid</span> <span class="p">]</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>DataMapper only issues updates or creates for the properties it knows about. So
+it plays well with others. You can use it in an Integration Database without
+worrying that your application will be a bad actor causing trouble for all of
+your other processes.</p>
+
+<p>DataMapper has full support for Composite Primary Keys (CPK) builtin.
+Specifying the properties that form the primary key is easy.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">LineItem</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:order_id</span><span class="p">,</span>    <span class="no">Integer</span><span class="p">,</span> <span class="ss">:key</span> <span class="o">=&gt;</span> <span class="kp">true</span>
+  <span class="n">property</span> <span class="ss">:item_number</span><span class="p">,</span> <span class="no">Integer</span><span class="p">,</span> <span class="ss">:key</span> <span class="o">=&gt;</span> <span class="kp">true</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>If we were to know an <code class="highlighter-rouge">order_id</code>/<code class="highlighter-rouge">item_number</code> combination, we can
+easily retrieve the corresponding line item from the datastore.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="code"><pre><span class="n">order_id</span><span class="p">,</span> <span class="n">item_number</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span>
+<span class="no">LineItem</span><span class="p">.</span><span class="nf">get</span><span class="p">(</span><span class="n">order_id</span><span class="p">,</span> <span class="n">item_number</span><span class="p">)</span>
+<span class="c1"># =&gt; [#&lt;LineItem @orderid=1 @item_number=1&gt;]</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="less-need-for-writing-migrations">Less need for writing migrations</h2>
+
+<p>With DataMapper, you specify the datastore layout inside your ruby
+models. This allows DataMapper to create the underlying datastore schema
+based on the models you defined. The <code class="highlighter-rouge">#auto_migrate!</code> and <code class="highlighter-rouge">#auto_upgrade!</code>
+methods can be used to generate a schema in the datastore that matches
+your model definitions.</p>
+
+<p>While <code class="highlighter-rouge">#auto_migrate!</code> <em>destructively</em> drops and recreates tables to match
+your model definitions, <code class="highlighter-rouge">#auto_upgrade!</code> supports upgrading your
+datastore to match your model definitions, without actually destroying
+any already existing data.</p>
+
+<p>There are still some limitations to the operations that <code class="highlighter-rouge">#auto_upgrade!</code>
+can perform. We’re working hard on making it smarter, but there will
+always be scenarios where an automatic upgrade of your schema won’t be
+possible. For example, there’s no sane strategy for automatically changing
+a column length constraint from <code class="highlighter-rouge">VARCHAR(100)</code> to <code class="highlighter-rouge">VARCHAR(50)</code>. DataMapper
+can’t know what it should do when the data doesn’t validate against the
+new tightened constraints.</p>
+
+<p>In situations where neither <code class="highlighter-rouge">#auto_migrate!</code> nor <code class="highlighter-rouge">#auto_upgrade!</code> quite cut
+it, you can still fall back to the classic migrations feature provided
+by <a href="http://github.com/datamapper/dm-migrations">dm-migrations</a>.</p>
+
+<p>Here’s some code that puts <code class="highlighter-rouge">#auto_migrate!</code> and <code class="highlighter-rouge">#auto_upgrade!</code> to use.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+</pre></td><td class="code"><pre><span class="nb">require</span> <span class="s1">'rubygems'</span>
+<span class="nb">require</span> <span class="s1">'dm-core'</span>
+<span class="nb">require</span> <span class="s1">'dm-migrations'</span>
+
+<span class="no">DataMapper</span><span class="o">::</span><span class="no">Logger</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="vg">$stdout</span><span class="p">,</span> <span class="ss">:debug</span><span class="p">)</span>
+<span class="no">DataMapper</span><span class="p">.</span><span class="nf">setup</span><span class="p">(</span><span class="ss">:default</span><span class="p">,</span> <span class="s1">'mysql://localhost/test'</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Person</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>   <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:name</span><span class="p">,</span> <span class="no">String</span><span class="p">,</span> <span class="ss">:required</span> <span class="o">=&gt;</span> <span class="kp">true</span>
+<span class="k">end</span>
+
+<span class="no">DataMapper</span><span class="p">.</span><span class="nf">auto_migrate!</span>
+
+<span class="c1"># ~ (0.015754) SET sql_auto_is_null = 0</span>
+<span class="c1"># ~ (0.000335) SET SESSION sql_mode = 'ANSI,NO_BACKSLASH_ESCAPES,NO_DIR_IN_CREATE,NO_ENGINE_SUBSTITUTION,NO_UNSIGNED_SUBTRACTION,TRADITIONAL'</span>
+<span class="c1"># ~ (0.283290) DROP TABLE IF EXISTS `people`</span>
+<span class="c1"># ~ (0.029274) SHOW TABLES LIKE 'people'</span>
+<span class="c1"># ~ (0.000103) SET sql_auto_is_null = 0</span>
+<span class="c1"># ~ (0.000111) SET SESSION sql_mode = 'ANSI,NO_BACKSLASH_ESCAPES,NO_DIR_IN_CREATE,NO_ENGINE_SUBSTITUTION,NO_UNSIGNED_SUBTRACTION,TRADITIONAL'</span>
+<span class="c1"># ~ (0.000932) SHOW VARIABLES LIKE 'character_set_connection'</span>
+<span class="c1"># ~ (0.000393) SHOW VARIABLES LIKE 'collation_connection'</span>
+<span class="c1"># ~ (0.080191) CREATE TABLE `people` (`id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT, `name` VARCHAR(50) NOT NULL, PRIMARY KEY(`id`)) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci</span>
+<span class="c1"># =&gt; #&lt;DataMapper::DescendantSet:0x101379a68 @descendants=[Person]&gt;</span>
+
+<span class="k">class</span> <span class="nc">Person</span>
+  <span class="n">property</span> <span class="ss">:hobby</span><span class="p">,</span> <span class="no">String</span>
+<span class="k">end</span>
+
+<span class="no">DataMapper</span><span class="p">.</span><span class="nf">auto_upgrade!</span>
+
+<span class="c1"># ~ (0.000612) SHOW TABLES LIKE 'people'</span>
+<span class="c1"># ~ (0.000079) SET sql_auto_is_null = 0</span>
+<span class="c1"># ~ (0.000081) SET SESSION sql_mode = 'ANSI,NO_BACKSLASH_ESCAPES,NO_DIR_IN_CREATE,NO_ENGINE_SUBSTITUTION,NO_UNSIGNED_SUBTRACTION,TRADITIONAL'</span>
+<span class="c1"># ~ (1.794475) SHOW COLUMNS FROM `people` LIKE 'id'</span>
+<span class="c1"># ~ (0.001412) SHOW COLUMNS FROM `people` LIKE 'name'</span>
+<span class="c1"># ~ (0.001121) SHOW COLUMNS FROM `people` LIKE 'hobby'</span>
+<span class="c1"># ~ (0.153989) ALTER TABLE `people` ADD COLUMN `hobby` VARCHAR(50)</span>
+<span class="c1"># =&gt; #&lt;DataMapper::DescendantSet:0x101379a68 @descendants=[Person]&gt;</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="data-integrity-is-important">Data integrity is important</h2>
+
+<p>DataMapper makes it easy to leverage native techniques for enforcing
+data integrity. The <a href="http://github.com/datamapper/dm-constraints">dm-constraints</a>
+plugin provides support for establishing true foreign key constraints in
+databases that support that concept.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+</pre></td><td class="code"><pre><span class="nb">require</span> <span class="s1">'rubygems'</span>
+<span class="nb">require</span> <span class="s1">'dm-core'</span>
+<span class="nb">require</span> <span class="s1">'dm-constraints'</span>
+<span class="nb">require</span> <span class="s1">'dm-migrations'</span>
+
+<span class="no">DataMapper</span><span class="o">::</span><span class="no">Logger</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="vg">$stdout</span><span class="p">,</span> <span class="ss">:debug</span><span class="p">)</span>
+<span class="no">DataMapper</span><span class="p">.</span><span class="nf">setup</span><span class="p">(</span><span class="ss">:default</span><span class="p">,</span> <span class="s1">'mysql://localhost/test'</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Person</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span> <span class="no">Serial</span>
+  <span class="n">has</span> <span class="n">n</span><span class="p">,</span> <span class="ss">:tasks</span><span class="p">,</span> <span class="ss">:constraint</span> <span class="o">=&gt;</span> <span class="ss">:destroy</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">Task</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span> <span class="no">Serial</span>
+  <span class="n">belongs_to</span> <span class="ss">:person</span>
+<span class="k">end</span>
+
+<span class="no">DataMapper</span><span class="p">.</span><span class="nf">auto_migrate!</span>
+
+<span class="c1"># ~ (0.000131) SET sql_auto_is_null = 0</span>
+<span class="c1"># ~ (0.000141) SET SESSION sql_mode = 'ANSI,NO_BACKSLASH_ESCAPES,NO_DIR_IN_CREATE,NO_ENGINE_SUBSTITUTION,NO_UNSIGNED_SUBTRACTION,TRADITIONAL'</span>
+<span class="c1"># ~ (0.017995) SHOW TABLES LIKE 'people'</span>
+<span class="c1"># ~ (0.000278) SHOW TABLES LIKE 'tasks'</span>
+<span class="c1"># ~ (0.001435) DROP TABLE IF EXISTS `people`</span>
+<span class="c1"># ~ (0.000226) SHOW TABLES LIKE 'people'</span>
+<span class="c1"># ~ (0.000093) SET sql_auto_is_null = 0</span>
+<span class="c1"># ~ (0.000087) SET SESSION sql_mode = 'ANSI,NO_BACKSLASH_ESCAPES,NO_DIR_IN_CREATE,NO_ENGINE_SUBSTITUTION,NO_UNSIGNED_SUBTRACTION,TRADITIONAL'</span>
+<span class="c1"># ~ (0.000334) SHOW VARIABLES LIKE 'character_set_connection'</span>
+<span class="c1"># ~ (0.000278) SHOW VARIABLES LIKE 'collation_connection'</span>
+<span class="c1"># ~ (0.187402) CREATE TABLE `people` (`id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT, PRIMARY KEY(`id`)) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci</span>
+<span class="c1"># ~ (0.000309) DROP TABLE IF EXISTS `tasks`</span>
+<span class="c1"># ~ (0.000313) SHOW TABLES LIKE 'tasks'</span>
+<span class="c1"># ~ (0.200487) CREATE TABLE `tasks` (`id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT, `person_id` INT(10) UNSIGNED NOT NULL, PRIMARY KEY(`id`)) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci</span>
+<span class="c1"># ~ (0.146982) CREATE INDEX `index_tasks_person` ON `tasks` (`person_id`)</span>
+<span class="c1"># ~ (0.002525) SELECT COUNT(*) FROM "information_schema"."table_constraints" WHERE "constraint_type" = 'FOREIGN KEY' AND "table_schema" = 'test' AND "table_name" = 'tasks' AND "constraint_name" = 'tasks_person_fk'</span>
+<span class="c1"># ~ (0.230075) ALTER TABLE `tasks` ADD CONSTRAINT `tasks_person_fk` FOREIGN KEY (`person_id`) REFERENCES `people` (`id`) ON DELETE CASCADE ON UPDATE CASCADE</span>
+<span class="c1"># =&gt; #&lt;DataMapper::DescendantSet:0x101379a68 @descendants=[Person, Task]&gt;</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Notice how the last statement adds a foreign key constraint to the
+schema definition.</p>
+
+<h2 id="strategic-eager-loading">Strategic Eager Loading</h2>
+
+<p>DataMapper will only issue the very bare minimums of queries to your data-store
+that it needs to. For example, the following example will only issue 2 queries.
+Notice how we don’t supply any extra <code class="highlighter-rouge">:include</code> information.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="code"><pre><span class="n">zoos</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span>
+<span class="n">zoos</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">zoo</span><span class="o">|</span>
+  <span class="c1"># on first iteration, DM loads up all of the exhibits for all of the items in zoos</span>
+  <span class="c1"># in 1 query to the data-store.</span>
+
+  <span class="n">zoo</span><span class="p">.</span><span class="nf">exhibits</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">exhibit</span><span class="o">|</span>
+    <span class="c1"># n+1 queries in other ORMs, not in DataMapper</span>
+    <span class="nb">puts</span> <span class="s2">"Zoo: </span><span class="si">#{</span><span class="n">zoo</span><span class="p">.</span><span class="nf">name</span><span class="si">}</span><span class="s2">, Exhibit: </span><span class="si">#{</span><span class="n">exhibit</span><span class="p">.</span><span class="nf">name</span><span class="si">}</span><span class="s2">"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>The idea is that you aren’t going to load a set of objects and use only an
+association in just one of them. This should hold up pretty well against a 99%
+rule.</p>
+
+<p>When you don’t want it to work like this, just load the item you want in its
+own set. So DataMapper thinks ahead. We like to call it “performant by default”.
+<em>This feature single-handedly wipes out the “N+1 Query Problem”.</em></p>
+
+<p>DataMapper also waits until the very last second to actually issue the query to
+your data-store. For example, <code class="highlighter-rouge">zoos = Zoo.all</code> won’t run the query until you
+start iterating over <code class="highlighter-rouge">zoos</code> or call one of the ‘kicker’ methods like <code class="highlighter-rouge">#length</code>.
+If you never do anything with the results of a query, DataMapper won’t incur the
+latency of talking to your data-store.</p>
+
+<p><strong>Note:</strong> that this currently doesn’t work when you start to nest loops
+that access the associations more than one level deep. The following
+would <em>not</em> issue the optimal amount of queries:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="code"><pre><span class="n">zoos</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span>
+<span class="n">zoos</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">zoo</span><span class="o">|</span>
+  <span class="c1"># on first iteration, DM loads up all of the exhibits for all of the items in zoos</span>
+  <span class="c1"># in 1 query to the data-store.</span>
+
+  <span class="n">zoo</span><span class="p">.</span><span class="nf">exhibits</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">exhibit</span><span class="o">|</span>
+    <span class="c1"># n+1 queries in other ORMs, not in DataMapper</span>
+    <span class="nb">puts</span> <span class="s2">"Zoo: </span><span class="si">#{</span><span class="n">zoo</span><span class="p">.</span><span class="nf">name</span><span class="si">}</span><span class="s2">, Exhibit: </span><span class="si">#{</span><span class="n">exhibit</span><span class="p">.</span><span class="nf">name</span><span class="si">}</span><span class="s2">"</span>
+
+    <span class="n">exhibit</span><span class="p">.</span><span class="nf">items</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">item</span><span class="o">|</span>
+      <span class="c1"># currently DM won't be smart about the queries it generates for</span>
+      <span class="c1"># accessing the items in any particular exhibit</span>
+      <span class="nb">puts</span> <span class="s2">"Item: </span><span class="si">#{</span><span class="n">item</span><span class="p">.</span><span class="nf">name</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>However, there’s work underway to remove that limitation. In the future,
+it will be possible to get the same smart queries inside deeper nested
+iterations.</p>
+
+<p>Depending on your specific needs, it might be possible to workaround
+this limitations by using DataMapper’s feature that allows you to query
+models by their associations, as described briefly in the chapter below.</p>
+
+<p>You can also find more information about this feature on the
+<a href="/docs/find.html">Finders</a> and the <a href="/docs/associations.html">Associations</a> pages.</p>
+
+<h2 id="querying-models-by-their-associations">Querying models by their associations</h2>
+
+<p>DataMapper allows you to create and search for any complex object graph simply by providing a nested hash of conditions. The following example uses a typical Customer - Order domain model to illustrate how nested conditions can be used to both create and query models by their associations.</p>
+
+<p>For a complete definition of the Customer - Order domain models have a look at the <a href="/docs/find.html">Finders</a> page.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+</pre></td><td class="code"><pre><span class="c1"># A hash specifying one customer with one order</span>
+<span class="c1">#</span>
+<span class="c1"># In general, possible keys are all property and relationship</span>
+<span class="c1"># names that are available on the relationship's target model.</span>
+<span class="c1"># Possible toplevel keys depend on the property and relationship</span>
+<span class="c1"># names available in the model that receives the hash.</span>
+<span class="c1">#</span>
+<span class="n">customer</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="ss">:name</span>   <span class="o">=&gt;</span> <span class="s1">'Dan Kubb'</span><span class="p">,</span>
+  <span class="ss">:orders</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="ss">:reference</span>   <span class="o">=&gt;</span> <span class="s1">'TEST1234'</span><span class="p">,</span>
+      <span class="ss">:order_lines</span> <span class="o">=&gt;</span> <span class="p">[</span>
+        <span class="p">{</span>
+          <span class="ss">:item</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="ss">:sku</span>        <span class="o">=&gt;</span> <span class="s1">'BLUEWIDGET1'</span><span class="p">,</span>
+            <span class="ss">:unit_price</span> <span class="o">=&gt;</span> <span class="mf">1.00</span><span class="p">,</span>
+          <span class="p">},</span>
+        <span class="p">},</span>
+      <span class="p">],</span>
+    <span class="p">},</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+
+<span class="c1"># Create the Customer with the nested options hash</span>
+<span class="no">Customer</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="n">customer</span><span class="p">)</span>
+<span class="c1"># =&gt; [#&lt;Customer @id=1 @name="Dan Kubb"&gt;]</span>
+
+<span class="c1"># The same options to create can also be used to query for the same object</span>
+<span class="nb">p</span> <span class="no">Customer</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="n">customer</span><span class="p">)</span>
+<span class="c1"># =&gt; [#&lt;Customer @id=1 @name="Dan Kubb"&gt;]</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>QueryPaths can be used to construct joins in a very declarative manner.</p>
+
+<p>Starting from a root model, you can call any relationship by its name.
+The returned object again responds to all property and relationship names
+that are defined in the relationship’s target model.</p>
+
+<p>This means that you can walk the chain of available relationships, and then
+match against a property at the end of that chain. The object returned by
+the last call to a property name also responds to all the comparison
+operators that we saw above. This makes for some powerful join construction!</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="code"><pre><span class="no">Customer</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="no">Customer</span><span class="p">.</span><span class="nf">orders</span><span class="p">.</span><span class="nf">order_lines</span><span class="p">.</span><span class="nf">item</span><span class="p">.</span><span class="nf">sku</span><span class="p">.</span><span class="nf">like</span> <span class="o">=&gt;</span> <span class="s2">"%BLUE%"</span><span class="p">)</span>
+<span class="c1"># =&gt; [#&lt;Customer @id=1 @name="Dan Kubb"&gt;]</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>You can even chain calls to <code class="highlighter-rouge">all</code> or <code class="highlighter-rouge">first</code> to continue refining your query or
+search within a scope. See <a href="/docs/find.html">Finders</a> for more information.</p>
+
+<h2 id="identity-map">Identity Map</h2>
+
+<p>One row in the database should equal one object reference. Pretty simple idea.
+Pretty profound impact. If you run the following code in ActiveRecord you’ll see
+all <code class="highlighter-rouge">false</code> results. Do the same in DataMapper and it’s <code class="highlighter-rouge">true</code> all the way down.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="code"><pre><span class="vi">@parent</span> <span class="o">=</span> <span class="no">Tree</span><span class="p">.</span><span class="nf">first</span><span class="p">(</span><span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'bob'</span> <span class="p">})</span>
+
+<span class="vi">@parent</span><span class="p">.</span><span class="nf">children</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">child</span><span class="o">|</span>
+  <span class="nb">puts</span> <span class="vi">@parent</span><span class="p">.</span><span class="nf">object_id</span> <span class="o">==</span> <span class="n">child</span><span class="p">.</span><span class="nf">parent</span><span class="p">.</span><span class="nf">object_id</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>This makes DataMapper faster and allocate less resources to get things done.</p>
+
+<h2 id="laziness-can-be-a-virtue">Laziness Can Be A Virtue</h2>
+
+<p>Columns of potentially infinite length, like Text columns, are expensive in
+data-stores. They’re generally stored in a different place from the rest of your
+data. So instead of a fast sequential read from your hard-drive, your data-store
+has to hop around all over the place to get what it needs.</p>
+
+<p>With DataMapper, these fields are treated like in-row associations by default,
+meaning they are loaded if and only if you access them. If you want more control
+you can enable or disable this feature for any column (not just text-fields) by
+passing a <code class="highlighter-rouge">lazy</code> option to your column mapping with a value of <code class="highlighter-rouge">true</code> or
+<code class="highlighter-rouge">false</code>.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Animal</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>    <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:name</span><span class="p">,</span>  <span class="no">String</span>
+  <span class="n">property</span> <span class="ss">:notes</span><span class="p">,</span> <span class="no">Text</span>    <span class="c1"># lazy-loads by default</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Plus, lazy-loading of Text property happens automatically and intelligently when
+working with associations. The following only issues 2 queries to load up all of
+the notes fields on each animal:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="code"><pre><span class="n">animals</span> <span class="o">=</span> <span class="no">Animal</span><span class="p">.</span><span class="nf">all</span>
+<span class="n">animals</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">pet</span><span class="o">|</span>
+  <span class="n">pet</span><span class="p">.</span><span class="nf">notes</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="embracing-ruby">Embracing Ruby</h2>
+
+<p>DataMapper loves Ruby and is therefore tested regularly against all
+major Ruby versions. Before release, every gem is explicitly tested
+against MRI 1.8.7, 1.9.2, JRuby and Rubinius. We’re proud to say that
+almost all of our specs pass on all these different implementations.</p>
+
+<p>Have a look at our <a href="http://ci.datamapper.org">CI server reports</a>
+for detailed information about which gems pass or fail their specs on
+the various Ruby implementations. Note that these results always reflect
+the state of the latest codes and not the state of the latest released
+gem. Our CI server runs tests for all permutations whenever someone
+commits to any of the tested repositories on Github.</p>
+
+<h2 id="all-ruby-all-the-time">All Ruby, All The Time</h2>
+
+<p>DataMapper goes further than most Ruby ORMs in letting you avoid writing raw
+query fragments yourself. It provides more helpers and a unique hash-based
+conditions syntax to cover more of the use-cases where issuing your own SQL
+would have been the only way to go.</p>
+
+<p>For example, any finder option that are non-standard is considered a condition.
+So you can write <code class="highlighter-rouge">Zoo.all(:name =&gt; 'Dallas')</code> and DataMapper will look for zoos
+with the name of ‘Dallas’.</p>
+
+<p>It’s just a little thing, but it’s so much nicer than writing
+<code class="highlighter-rouge">Zoo.find(:all, :conditions =&gt; [ 'name = ?', 'Dallas' ])</code> and won’t incur the
+Ruby overhead of
+<code class="highlighter-rouge">Zoo.find_by_name('Dallas')</code>, nor is it more difficult to understand once the
+number of parameters increases.</p>
+
+<p>What if you need other comparisons though? Try these:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td><td class="code"><pre><span class="no">Zoo</span><span class="p">.</span><span class="nf">first</span><span class="p">(</span><span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'Galveston'</span><span class="p">)</span>
+
+<span class="c1"># 'gt' means greater-than. 'lt' is less-than.</span>
+<span class="no">Person</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:age</span><span class="p">.</span><span class="nf">gt</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">)</span>
+
+<span class="c1"># 'gte' means greather-than-or-equal-to. 'lte' is also available</span>
+<span class="no">Person</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:age</span><span class="p">.</span><span class="nf">gte</span> <span class="o">=&gt;</span> <span class="mi">30</span><span class="p">)</span>
+
+<span class="no">Person</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:name</span><span class="p">.</span><span class="nf">not</span> <span class="o">=&gt;</span> <span class="s1">'bob'</span><span class="p">)</span>
+
+<span class="c1"># If the value of a pair is an Array, we do an IN-clause for you.</span>
+<span class="no">Person</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:name</span><span class="p">.</span><span class="nf">like</span> <span class="o">=&gt;</span> <span class="s1">'S%'</span><span class="p">,</span> <span class="ss">:id</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span> <span class="p">])</span>
+
+<span class="c1"># Does a NOT IN () clause for you.</span>
+<span class="no">Person</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:name</span><span class="p">.</span><span class="nf">not</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="s1">'bob'</span><span class="p">,</span> <span class="s1">'rick'</span><span class="p">,</span> <span class="s1">'steve'</span> <span class="p">])</span>
+
+<span class="c1"># Ordering</span>
+<span class="no">Person</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:order</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="ss">:age</span><span class="p">.</span><span class="nf">desc</span> <span class="p">])</span>
+<span class="c1"># .asc is the default</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="open-development">Open Development</h2>
+
+<p>DataMapper sports a very accessible code-base and a welcoming community. Outside
+contributions and feedback are welcome and encouraged, especially constructive
+criticism. Go ahead, fork DataMapper, we’d love to see what you come up with!</p>
+
+<p>Make your voice heard! <a href="http://github.com/datamapper/dm-core/issues">Submit a ticket or patch</a>,
+speak up on our <a href="http://groups.google.com/group/datamapper/">mailing-list</a>,
+chat with us on <a href="http://webchat.freenode.net/?channels=datamapper">IRC</a>, write a spec,
+get it reviewed, ask for commit rights. It’s as easy as that to become a contributor.</p>
+
+
+            <div id="footer">
+        <p>Copyright Sam Smoot 2007, 2008</p>
+        <p>Copyright Dan Kubb 2009-2012</p>
+        <p>Web Design by <a href="http://www.mr-eel.com/">Luke Matthew Sutton</a> - Community Maintained</p>
+      </div>
+
+    </div>
+  </body>
+</html>

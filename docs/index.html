@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+     <title>DataMapper - Documentation</title>
+     <link rel="stylesheet" href="/datamapper-docs/css/site.css" type="text/css" media="screen, projection" />
+     <link rel="stylesheet" href="/datamapper-docs/css/code.css" type="text/css" media="screen, projection" />
+     <!--[if lt IE 7]> <link rel="stylesheet" href="/datamapper-docs/css/ie_hacks.css" type="text/css" media="screen, projection" /> <![endif]-->
+     <link rel="Shortcut Icon" type="image/x-icon" href="/datamapper-docs/favicon.ico" />
+  </head>
+
+  <body id="home">
+
+  <div style="width:100%;background:#d1ecf1;padding:15px;color:#0c5460;text-align:center;font-weight:bold;margin-bottom:20px;">
+    This is a clone of the datamapper docs. Datamapper.org was taken down and redirected around Feb, 2020. I claim no ownership of any of this stuff.
+  </div>
+
+    <div id="content">
+
+      <div id="header">
+                <h1><a href="/datamapper-docs/">DataMapper</a></h1>
+
+        <ul>
+          <li><a href="/datamapper-docs/docs">Documentation</a></li>
+          <li><a href="https://github.com/datamapper/dm-core/wiki">Wiki</a></li>
+          <li><a href="/datamapper-docs/getting-started.html" id="getStarted">Get Started</a></li>
+        </ul>
+
+      </div>
+
+   <h1 id="documentation">Documentation</h1>
+
+<dl>
+  <dt><a href="http://rubydoc.info/gems/dm-core/1.1.0/frames">API</a></dt>
+  <dd>The API for the current gem release.</dd>
+  <dt><a href="/why.html">Why DataMapper?</a></dt>
+  <dd>If you haven't read this yet, you should, right now!</dd>
+  <dt><a href="/getting-started.html">Getting Started</a></dt>
+  <dd>A whirlwind tour of DM. This is the place to start if you haven't used the library before.</dd>
+  <dt><a href="/datamapper-docs/docs/install.html">Common installation issues</a></dt>
+  <dd>Troubleshooting installation, with instructions for specific platforms.</dd>
+  <dt><a href="/datamapper-docs/docs/properties.html">Properties</a></dt>
+  <dd>Properties declared in your model map to the fields in the database.</dd>
+  <dt><a href="/datamapper-docs/docs/create_and_destroy.html">Creating, Saving, Updating and Destroying Records</a></dt>
+  <dd>Obviously you're going to be doing a lot of this :)</dd>
+  <dt><a href="/datamapper-docs/docs/validations.html">Validations</a></dt>
+  <dd>Auto-validations, manual validations, contextual validations</dd>
+  <dt><a href="/datamapper-docs/docs/find.html">Finding and Counting Records</a></dt>
+  <dd>There are lots of nice ways to find records.</dd>
+  <dt><a href="/datamapper-docs/docs/associations.html">Associations</a></dt>
+  <dd>Models can be associated to each other in various ways using the <code>has</code> keyword</dd>
+  <dt><a href="/datamapper-docs/docs/callbacks.html">Hooks</a></dt>
+  <dd>Hooks, AKA Callbacks, allow you to "advise other methods" by running methods before or after calling other methods.</dd>
+  <dt><a href="/datamapper-docs/docs/misc.html">Misc. Features</a></dt>
+  <dd>Paranoia, Timezone Handling, Single Table Inheritance, and Multiple Repositories.</dd>
+  <dt><a href="/datamapper-docs/docs/legacy.html">Working with Legacy Schemas</a></dt>
+  <dd>Adapting data-store naming conventions to your own property names.</dd>
+  <dt><a href="/datamapper-docs/docs/pitfalls.html">Common Pitfalls</a></dt>
+  <dd>Solutions and work-arounds to common problems.</dd>
+  <dt><a href="/datamapper-docs/docs/dm_more/">More</a></dt>
+  <dd>Plugins galore for DataMapper.</dd>
+</dl>
+
+<h2 id="documentarians-wanted">Documentarians Wanted!</h2>
+
+<p>Want to help DataMapper, but don’t know where to start? A great way to contribute is to help out in the documentation effort.</p>
+
+<p>If you know of some interesting and useful functionality that isn’t covered on <a href="http://datamapper.org">datamapper.org</a>, just go ahead and fork <a href="http://github.com/datamapper/datamapper.github.com">datamapper.github.com</a>, send us a pull request, and we’ll merge it as fast as we can. If you want to contribute more, we can give you commit access to the repository right after that.</p>
+
+<p>If you find some undocumented piece of code inside <a href="http://github.com/datamapper/dm-core">dm-core</a> or any of the other <a href="http://github.com/datamapper">datamapper</a> repositories, we would greatly appreciate it if you take the time to read and understand that code, fork the repository, add the necessary docs and send us a pull request. Again, we’ll try to merge them as fast as we can.</p>
+
+<h2 id="documentation-style">Documentation Style</h2>
+
+<p>DataMapper uses the YARD standard for RDoc documentation. Here’s a brief sample
+from the internals of DM-Core:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+</pre></td><td class="code"><pre><span class="c1"># Setups up a connection to a data-store</span>
+<span class="c1">#</span>
+<span class="c1"># @param [Symbol] name</span>
+<span class="c1">#   a name for the context, defaults to :default</span>
+<span class="c1"># @param [Hash(Symbol =&gt; String), Addressable::URI, String] uri_or_options</span>
+<span class="c1">#   connection information</span>
+<span class="c1">#</span>
+<span class="c1"># @return [DataMapper::Adapters::AbstractAdapter]</span>
+<span class="c1">#   the resulting setup adapter</span>
+<span class="c1">#</span>
+<span class="c1"># @raise [ArgumentError] "+name+ must be a Symbol, but was..."</span>
+<span class="c1">#   indicates that an invalid argument was passed for name[Symbol]</span>
+<span class="c1"># @raise [ArgumentError] "+uri_or_options+ must be a Hash, URI or String, but was..."</span>
+<span class="c1">#   indicates that connection information could not be gleaned from</span>
+<span class="c1">#   the given uri_or_options[Hash, Addressable::URI, String]</span>
+<span class="c1">#</span>
+<span class="c1"># @api public</span>
+<span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">setup</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">uri_or_options</span><span class="p">)</span>
+  <span class="k">raise</span> <span class="no">ArgumentError</span><span class="p">,</span> <span class="s2">"+name+ must be a Symbol, but was </span><span class="si">#{</span><span class="nb">name</span><span class="p">.</span><span class="nf">class</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="nb">caller</span> <span class="k">unless</span> <span class="no">Symbol</span> <span class="o">===</span> <span class="nb">name</span>
+  <span class="c1">#...</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>For more information about the YARD documentation style, see the YARD
+<a href="http://rubydoc.info/datamapper-docs/docs/yard/file/datamapper-docs/docs/GettingStarted.md">Getting Started</a> document.</p>
+
+<ul>
+  <li></li>
+</ul>
+
+
+            <div id="footer">
+        <p>Copyright Sam Smoot 2007, 2008</p>
+        <p>Copyright Dan Kubb 2009-2012</p>
+        <p>Web Design by <a href="http://www.mr-eel.com/">Luke Matthew Sutton</a> - Community Maintained</p>
+      </div>
+
+    </div>
+  </body>
+</html>
