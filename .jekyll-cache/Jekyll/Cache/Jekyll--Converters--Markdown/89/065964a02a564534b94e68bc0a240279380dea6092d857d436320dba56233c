@@ -1,0 +1,51 @@
+I"�
+<h1 id="installation-issues">Installation Issues</h1>
+
+<p>If you’ve followed the <a href="/getting-started.html">install instructions</a> but run
+into problems, you can find some tips below.</p>
+
+<h2 id="dependencies">Dependencies</h2>
+
+<p>First port of call if you’re having issues with an installation is to make sure
+you have all the dependencies installed. RubyGems should take care of this for
+you, but just in case, make sure you have the following gems as well:</p>
+
+<ul>
+  <li><a href="http://rubygems.org/gems/addressable">addressable</a></li>
+  <li><a href="http://rubygems.org/gems/json_pure">json_pure</a></li>
+  <li><a href="http://rubygems.org/gems/rspec">RSpec</a> - for running specs on DataMapper itself</li>
+  <li><a href="http://rubygems.org/gems/yard">YARD</a>   - for building documentation</li>
+</ul>
+
+<h2 id="installing-an-adapter">Installing an adapter</h2>
+
+<p>You will also need to install the adapter for your platform:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre>gem <span class="nb">install </span>dm-mysql-adapter
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>The current database adapters are:</p>
+
+<ul>
+  <li><a href="http://github.com/datamapper/dm-mysql-adapter">dm-mysql-adapter</a></li>
+  <li><a href="http://github.com/datamapper/dm-sqlite-adapter">dm-sqlite-adapter</a></li>
+  <li><a href="http://github.com/datamapper/dm-postgres-adapter">dm-postgres-adapter</a></li>
+  <li><a href="http://github.com/datamapper/dm-oracle-adapter">dm-oracle-adapter</a></li>
+  <li><a href="http://github.com/datamapper/dm-sqlserver-adapter">dm-sqlserver-adapter</a></li>
+</ul>
+
+<p>There are also many more database, and non-database, adapters. Have a
+look at the (probably incomplete) list on the <a href="http://github.com/datamapper/dm-core/wiki/Adapters">github wiki</a>. Additionally, a quick <a href="http://github.com/search?langOverride=&amp;q=dm+adapter&amp;repo=&amp;start_value=1&amp;type=Repositories">github search</a> might reveal some more.</p>
+
+<h2 id="uninstalling-all-datamapper-gems">Uninstalling all DataMapper gems</h2>
+
+<p>Should you ever have the need to uninstall datamapper completely, Dan Kubb has prepared a bash command that does the trick. Have a look at <a href="http://gist.github.com/31187">this gist</a> for a oneliner that gets rid of datamapper completely.</p>
+
+<h2 id="getting-help">Getting Help</h2>
+
+<p>If you still have issues, we suggest getting onto the <a href="http://groups.google.com/group/datamapper">mailing list</a>
+or the <a href="irc://irc.freenode.net/%23datamapper">IRC channel</a> and asking around.
+There are friendly people there to help you out.</p>
+
+:ET

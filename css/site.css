@@ -9,8 +9,7 @@ body {
   background: center top url(../images/page_bkg.gif);
   color: white;
   font-family: "Lucida Grande", "Lucida Sans", Helvetica, Verdana, sans-serif;
-  font-size: 82%;
-  margin: 29px 0; }
+  font-size: 82%; }
 
 #content {
   background: left top repeat-y url(../images/content_bkg.gif);
@@ -138,7 +137,6 @@ p {
     font-size: 0.8em; }
 
 pre {
-  margin: 0 29px 2em 30px;
   background: #0c182a;
   border: 1px solid #26518a;
   padding: 1em 15px;
@@ -176,7 +174,7 @@ ol {
 
 a:link {
   color: #66ff33; }
-a:visited {
+a:viseited {
   color: #cccccc; }
 
 blockquote {
@@ -190,8 +188,6 @@ blockquote {
 #home h1 {
   margin-right: 240px;
   clear: both; }
-#home h2, #home h3, #home p, #home pre, #home .puff {
-  margin-right: 240px; }
 #home dd {
   width: 347px; }
   #home dd p {
@@ -388,7 +384,6 @@ dd {
     font-size: 0.9em; }
 
 table {
-  margin: 15px 29px 29px 30px;
   width: 90%; }
   table tr.head {
     height: 2em;

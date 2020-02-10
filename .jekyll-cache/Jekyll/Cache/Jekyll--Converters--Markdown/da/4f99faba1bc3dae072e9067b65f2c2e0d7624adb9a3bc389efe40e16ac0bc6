@@ -1,0 +1,562 @@
+I"I�<h1 id="finding-records">Finding Records</h1>
+
+<p>The finder methods for DataMapper objects are defined in
+<a href="http://rubydoc.info/github/datamapper/dm-core/master/DataMapper/Repository">DataMapper::Repository</a>. They include <code class="highlighter-rouge">#get</code>, <code class="highlighter-rouge">#all</code>, <code class="highlighter-rouge">#first</code>, <code class="highlighter-rouge">#last</code></p>
+
+<h2 id="finder-methods">Finder Methods</h2>
+
+<p>DataMapper has methods which allow you to grab a single record by key, the first
+match to a set of conditions, or a collection of records matching conditions.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="code"><pre><span class="n">zoo</span>  <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">get</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>                     <span class="c1"># get the zoo with primary key of 1.</span>
+<span class="n">zoo</span>  <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">get!</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>                    <span class="c1"># Or get! if you want an ObjectNotFoundError on failure</span>
+<span class="n">zoo</span>  <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">get</span><span class="p">(</span><span class="s1">'DFW'</span><span class="p">)</span>                 <span class="c1"># wow, support for natural primary keys</span>
+<span class="n">zoo</span>  <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">get</span><span class="p">(</span><span class="s1">'Metro'</span><span class="p">,</span> <span class="s1">'DFW'</span><span class="p">)</span>        <span class="c1"># more wow, composite key look-up</span>
+<span class="n">zoo</span>  <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">first</span><span class="p">(</span><span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'Metro'</span><span class="p">)</span>    <span class="c1"># first matching record with the name 'Metro'</span>
+<span class="n">zoo</span>  <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">last</span><span class="p">(</span><span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'Metro'</span><span class="p">)</span>     <span class="c1"># last matching record with the name 'Metro'</span>
+<span class="n">zoos</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span>                        <span class="c1"># all zoos</span>
+<span class="n">zoos</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:open</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">)</span>         <span class="c1"># all zoos that are open</span>
+<span class="n">zoos</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:opened_on</span> <span class="o">=&gt;</span> <span class="p">(</span><span class="n">s</span><span class="o">..</span><span class="n">e</span><span class="p">))</span>  <span class="c1"># all zoos that opened on a date in the date-range</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="scopes-and-chaining">Scopes and Chaining</h2>
+
+<p>Calls to `#all can be chained together to further build a query to the data-store:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="code"><pre><span class="n">all_zoos</span>      <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span>
+<span class="n">open_zoos</span>     <span class="o">=</span> <span class="n">all_zoos</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:open</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">)</span>
+<span class="n">big_open_zoos</span> <span class="o">=</span> <span class="n">open_zoos</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:animal_count</span> <span class="o">=&gt;</span> <span class="mi">1000</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>As a direct consequence, you can define scopes without any extra work in your model.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Zoo</span>
+  <span class="c1"># all the keys and property setup here</span>
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">open</span>
+    <span class="n">all</span><span class="p">(</span><span class="ss">:open</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">big</span>
+    <span class="n">all</span><span class="p">(</span><span class="ss">:animal_count</span> <span class="o">=&gt;</span> <span class="mi">1000</span><span class="p">)</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">big_open_zoos</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">big</span><span class="p">.</span><span class="nf">open</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Scopes like this can even have arguments. Do anything in them, just ensure they
+return a Query of some kind.</p>
+
+<h2 id="conditions">Conditions</h2>
+
+<p>Rather than defining conditions using SQL fragments, we can actually specify
+conditions using a hash.</p>
+
+<p>The examples above are pretty simple, but you might be wondering how we can
+specify conditions beyond equality without resorting to SQL. Well, thanks to
+some clever additions to the Symbol class, it’s easy!</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="code"><pre><span class="n">exhibitions</span> <span class="o">=</span> <span class="no">Exhibition</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:run_time</span><span class="p">.</span><span class="nf">gt</span> <span class="o">=&gt;</span> <span class="mi">2</span><span class="p">,</span> <span class="ss">:run_time</span><span class="p">.</span><span class="nf">lt</span> <span class="o">=&gt;</span> <span class="mi">5</span><span class="p">)</span>
+<span class="c1"># =&gt; SQL conditions: 'run_time &gt; 2 AND run_time &lt; 5'</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Valid symbol operators for the conditions are:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="code"><pre><span class="n">gt</span>    <span class="c1"># greater than</span>
+<span class="n">lt</span>    <span class="c1"># less than</span>
+<span class="n">gte</span>   <span class="c1"># greater than or equal</span>
+<span class="n">lte</span>   <span class="c1"># less than or equal</span>
+<span class="n">not</span>   <span class="c1"># not equal</span>
+<span class="n">eql</span>   <span class="c1"># equal</span>
+<span class="n">like</span>  <span class="c1"># like</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="nested-conditions">Nested Conditions</h2>
+<p>DataMapper allows you to create and search for any complex object graph simply by providing a nested hash of conditions.</p>
+
+<p>Possible keys are all property and relationship names (as symbols or strings) that are established in the model the current nesting level points to. The available toplevel keys depend on the model the conditions hash is passed to. We’ll see below how to change the nesting level and thus the model the property and relationship keys are scoped to.</p>
+
+<p>For property name keys, possible values typically are simple objects like strings, numbers, dates or booleans. Using properties as keys doesn’t add another nesting level.</p>
+
+<p>For relationship name keys, possible values are either a hash (if the relationship points to a single resource) or an array of hashes (if the relationship points to many resources). Adding a relationship name as key adds another nesting level scoped to the Model the relationship is pointing to. Inside this new level, the available keys are the property and relationship names of the model that the relationship points to. This is what we meant by “the Model the current nesting level points to”.</p>
+
+<p>The following example shows a typical Customer - Order domain model and illustrates how nested conditions can be used to both create and search for specific resources.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Customer</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>   <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:name</span><span class="p">,</span> <span class="no">String</span><span class="p">,</span> <span class="ss">:required</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span> <span class="ss">:length</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="o">..</span><span class="mi">100</span>
+
+  <span class="n">has</span> <span class="n">n</span><span class="p">,</span> <span class="ss">:orders</span>
+  <span class="n">has</span> <span class="n">n</span><span class="p">,</span> <span class="ss">:items</span><span class="p">,</span> <span class="ss">:through</span> <span class="o">=&gt;</span> <span class="ss">:orders</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">Order</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>        <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:reference</span><span class="p">,</span> <span class="no">String</span><span class="p">,</span> <span class="ss">:required</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span> <span class="ss">:length</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="o">..</span><span class="mi">20</span>
+
+  <span class="n">belongs_to</span> <span class="ss">:customer</span>
+
+  <span class="n">has</span> <span class="n">n</span><span class="p">,</span> <span class="ss">:order_lines</span>
+  <span class="n">has</span> <span class="n">n</span><span class="p">,</span> <span class="ss">:items</span><span class="p">,</span> <span class="ss">:through</span> <span class="o">=&gt;</span> <span class="ss">:order_lines</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">OrderLine</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>         <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:quantity</span><span class="p">,</span>   <span class="no">Integer</span><span class="p">,</span> <span class="ss">:required</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span> <span class="ss">:default</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="ss">:min</span> <span class="o">=&gt;</span> <span class="mi">1</span>
+  <span class="n">property</span> <span class="ss">:unit_price</span><span class="p">,</span> <span class="no">Decimal</span><span class="p">,</span> <span class="ss">:required</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span> <span class="ss">:default</span> <span class="o">=&gt;</span> <span class="nb">lambda</span> <span class="p">{</span> <span class="o">|</span><span class="n">r</span><span class="p">,</span> <span class="nb">p</span><span class="o">|</span> <span class="n">r</span><span class="p">.</span><span class="nf">item</span><span class="p">.</span><span class="nf">unit_price</span> <span class="p">}</span>
+
+  <span class="n">belongs_to</span> <span class="ss">:order</span>
+  <span class="n">belongs_to</span> <span class="ss">:item</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">Item</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>         <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:sku</span><span class="p">,</span>        <span class="no">String</span><span class="p">,</span>  <span class="ss">:required</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span> <span class="ss">:length</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="o">..</span><span class="mi">20</span>
+  <span class="n">property</span> <span class="ss">:unit_price</span><span class="p">,</span> <span class="no">Decimal</span><span class="p">,</span> <span class="ss">:required</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span> <span class="ss">:min</span> <span class="o">=&gt;</span> <span class="mi">0</span>
+
+  <span class="n">has</span> <span class="n">n</span><span class="p">,</span> <span class="ss">:order_lines</span>
+<span class="k">end</span>
+
+<span class="c1"># A hash specifying a customer with one order</span>
+<span class="n">customer</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="ss">:name</span>   <span class="o">=&gt;</span> <span class="s1">'Dan Kubb'</span><span class="p">,</span>
+  <span class="ss">:orders</span> <span class="o">=&gt;</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="ss">:reference</span>   <span class="o">=&gt;</span> <span class="s1">'TEST1234'</span><span class="p">,</span>
+      <span class="ss">:order_lines</span> <span class="o">=&gt;</span> <span class="p">[</span>
+        <span class="p">{</span>
+          <span class="ss">:item</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="ss">:sku</span>        <span class="o">=&gt;</span> <span class="s1">'BLUEWIDGET1'</span><span class="p">,</span>
+            <span class="ss">:unit_price</span> <span class="o">=&gt;</span> <span class="mf">1.00</span><span class="p">,</span>
+          <span class="p">},</span>
+        <span class="p">},</span>
+      <span class="p">],</span>
+    <span class="p">},</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+
+<span class="c1"># Create the Customer with the nested options hash</span>
+<span class="no">Customer</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="n">customer</span><span class="p">)</span>
+
+<span class="c1"># The options to create can also be used to retrieve the same object</span>
+<span class="nb">p</span> <span class="no">Customer</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="n">customer</span><span class="p">)</span>
+
+<span class="c1"># QueryPaths can be used to construct joins in a very declarative manner.</span>
+<span class="c1">#</span>
+<span class="c1"># Starting from a root model, you can call any relationship by its name.</span>
+<span class="c1"># The returned object again responds to all property and relationship names</span>
+<span class="c1"># that are defined in the relationship's target model.</span>
+<span class="c1">#</span>
+<span class="c1"># This means that you can walk the chain of available relationships, and then</span>
+<span class="c1"># match against a property at the end of that chain. The object returned by</span>
+<span class="c1"># the last call to a property name also responds to all the comparison</span>
+<span class="c1"># operators available in traditional queries. This makes for some powerful</span>
+<span class="c1"># join construction!</span>
+<span class="c1">#</span>
+<span class="no">Customer</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="no">Customer</span><span class="p">.</span><span class="nf">orders</span><span class="p">.</span><span class="nf">order_lines</span><span class="p">.</span><span class="nf">item</span><span class="p">.</span><span class="nf">sku</span><span class="p">.</span><span class="nf">like</span> <span class="o">=&gt;</span> <span class="s2">"%BLUE%"</span><span class="p">)</span>
+<span class="c1"># =&gt; [#&lt;Customer @id=1 @name="Dan Kubb"&gt;]</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="order">Order</h2>
+
+<p>To specify the order in which your results are to be sorted, use:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="code"><pre><span class="vi">@zoos_by_tiger_count</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:order</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="ss">:tiger_count</span><span class="p">.</span><span class="nf">desc</span> <span class="p">])</span>
+<span class="c1"># in SQL =&gt; SELECT * FROM "zoos" ORDER BY "tiger_count" DESC</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Available order vectors are:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="code"><pre><span class="n">asc</span>   <span class="c1"># sorting ascending</span>
+<span class="n">desc</span>  <span class="c1"># sorting descending</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Once you have the query, the order can be modified too.  Just call reverse:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="code"><pre><span class="vi">@least_tigers_first</span> <span class="o">=</span> <span class="vi">@zoos_by_tiger_count</span><span class="p">.</span><span class="nf">reverse</span>
+<span class="c1"># in SQL =&gt; SELECT * FROM "zoos" ORDER BY "tiger_count" ASC</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="ranges">Ranges</h2>
+
+<p>If you have guaranteed the order of a set of results, you might choose to only use the first ten results, like this.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="vi">@zoos_by_tiger_count</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:limit</span> <span class="o">=&gt;</span> <span class="mi">10</span><span class="p">,</span> <span class="ss">:order</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="ss">:tiger_count</span><span class="p">.</span><span class="nf">desc</span> <span class="p">])</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Or maybe you wanted the fifth set of ten results.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="vi">@zoos_by_tiger_count</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:offset</span> <span class="o">=&gt;</span> <span class="mi">40</span><span class="p">,</span> <span class="ss">:limit</span> <span class="o">=&gt;</span> <span class="mi">10</span><span class="p">,</span> <span class="ss">:order</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="ss">:tiger_count</span><span class="p">.</span><span class="nf">desc</span> <span class="p">])</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="combining-queries">Combining Queries</h2>
+
+<p>Sometimes, the simple queries DataMapper allows you to specify with the hash
+interface to <code class="highlighter-rouge">#all</code> just won’t cut it.  This might be because you want to
+specify an <code class="highlighter-rouge">OR</code> condition, though that’s just one possibility.  To accomplish
+more complex queries, DataMapper allows queries (or more accurately,
+Collections) to be combined using set operators.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td><td class="code"><pre><span class="c1"># Find all Zoos in Illinois, or those with five or more tigers</span>
+<span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:state</span> <span class="o">=&gt;</span> <span class="s1">'IL'</span><span class="p">)</span> <span class="o">+</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:tiger_count</span><span class="p">.</span><span class="nf">gte</span> <span class="o">=&gt;</span> <span class="mi">5</span><span class="p">)</span>
+<span class="c1"># in SQL =&gt; SELECT * FROM "zoos" WHERE ("state" = 'IL' OR "tiger_count" &gt;= 5)</span>
+
+<span class="c1"># It also works with the union operator</span>
+<span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:state</span> <span class="o">=&gt;</span> <span class="s1">'IL'</span><span class="p">)</span> <span class="o">|</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:tiger_count</span><span class="p">.</span><span class="nf">gte</span> <span class="o">=&gt;</span> <span class="mi">5</span><span class="p">)</span>
+<span class="c1"># in SQL =&gt; SELECT * FROM "zoos" WHERE ("state" = 'IL' OR "tiger_count" &gt;= 5)</span>
+
+<span class="c1"># Intersection produces an AND query</span>
+<span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:state</span> <span class="o">=&gt;</span> <span class="s1">'IL'</span><span class="p">)</span> <span class="o">&amp;</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:tiger_count</span><span class="p">.</span><span class="nf">gte</span> <span class="o">=&gt;</span> <span class="mi">5</span><span class="p">)</span>
+<span class="c1"># in SQL =&gt; SELECT * FROM "zoos" WHERE ("state" = 'IL' AND "tiger_count" &gt;= 5)</span>
+
+<span class="c1"># Subtraction produces a NOT query</span>
+<span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:state</span> <span class="o">=&gt;</span> <span class="s1">'IL'</span><span class="p">)</span> <span class="o">-</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:tiger_count</span><span class="p">.</span><span class="nf">gte</span> <span class="o">=&gt;</span> <span class="mi">5</span><span class="p">)</span>
+<span class="c1"># in SQL =&gt; SELECT * FROM "zoos" WHERE ("state" = 'IL' AND NOT("tiger_count" &gt;= 5))</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Of course, the latter two queries could be achieved using the standard symbol
+operators.  Set operators work on any Collection though, and so <code class="highlighter-rouge">Zoo.all(:state =&gt; 'IL')</code>
+could just as easily be replaced with <code class="highlighter-rouge">Zoo.open.big</code> or any other method which
+returns a collection.</p>
+
+<h2 id="projecting-only-specific-properties">Projecting only specific properties</h2>
+
+<p>In order to not select all of your model’s properties but only a subset of
+them, you can pass <code class="highlighter-rouge">:fields =&gt; [:desired, :property, :names]</code> in your queries.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="code"><pre><span class="c1"># Will return a mutable collection of zoos</span>
+<span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:fields</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="ss">:id</span><span class="p">,</span> <span class="ss">:name</span><span class="p">])</span>
+
+<span class="c1"># Will return an immutable collection of zoos.</span>
+<span class="c1"># The collection is immutable because we haven't</span>
+<span class="c1"># projected the primary key of the model.</span>
+<span class="c1"># DataMapper will raise DataMapper::ImmutableError</span>
+<span class="c1"># when trying to modify any resource inside the</span>
+<span class="c1"># returned collection.</span>
+<span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:fields</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="ss">:name</span><span class="p">])</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="compatibility">Compatibility</h2>
+
+<p>DataMapper supports other conditions syntaxes as well:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="code"><pre><span class="n">zoos</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="ss">:id</span> <span class="o">=&gt;</span> <span class="mi">34</span> <span class="p">})</span>
+
+<span class="c1"># You can use this syntax to call native storage engine functions</span>
+<span class="n">zoos</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="s1">'id = ?'</span><span class="p">,</span> <span class="mi">34</span> <span class="p">])</span>
+
+<span class="c1"># even mix and match</span>
+<span class="n">zoos</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="ss">:id</span> <span class="o">=&gt;</span> <span class="mi">34</span> <span class="p">},</span> <span class="ss">:name</span><span class="p">.</span><span class="nf">like</span> <span class="o">=&gt;</span> <span class="s1">'%foo%'</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="talking-directly-to-your-data-store">Talking directly to your data-store</h2>
+
+<p>Sometimes you may find that you need to tweak a query manually.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="code"><pre><span class="n">zoos</span> <span class="o">=</span> <span class="n">repository</span><span class="p">(</span><span class="ss">:default</span><span class="p">).</span><span class="nf">adapter</span><span class="p">.</span><span class="nf">select</span><span class="p">(</span><span class="s1">'SELECT name, open FROM zoos WHERE open = 1'</span><span class="p">)</span>
+<span class="c1">#      Note that this will not return Zoo objects, rather the raw data straight from the database</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p><code class="highlighter-rouge">zoos</code> will be full of Struct objects with <code class="highlighter-rouge">name</code>, and <code class="highlighter-rouge">open</code> attributes, rather
+than instances of the Zoo class. They’ll also be read-only. You can still use
+the interpolated array condition syntax as well:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="n">zoos</span> <span class="o">=</span> <span class="n">repository</span><span class="p">(</span><span class="ss">:default</span><span class="p">).</span><span class="nf">adapter</span><span class="p">.</span><span class="nf">select</span><span class="p">(</span><span class="s1">'SELECT name, open FROM zoos WHERE name = ?'</span><span class="p">,</span> <span class="s1">'Awesome Zoo'</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="grouping">Grouping</h2>
+
+<p>DataMapper automatically groups by all selected columns in order to
+return consistent results across various datastores. If you need to
+group by some columns explicitly, you can use the <code class="highlighter-rouge">:fields</code> combined
+with the <code class="highlighter-rouge">:unique</code> option.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Person</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>  <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:job</span><span class="p">,</span> <span class="no">String</span>
+<span class="k">end</span>
+
+<span class="no">Person</span><span class="p">.</span><span class="nf">auto_migrate!</span>
+
+<span class="c1"># Note that if you don't include the primary key, you will need to</span>
+<span class="c1"># specify an explicit order vector, because DM will default to the</span>
+<span class="c1"># primary key if it's not told otherwise (at least currently).</span>
+<span class="c1"># PostgreSQL will present this rather informative error message when</span>
+<span class="c1"># you leave out the order vector in the query below.</span>
+<span class="c1">#</span>
+<span class="c1">#   column "people.id" must appear in the GROUP BY clause</span>
+<span class="c1">#   or be used in an aggregate function</span>
+<span class="c1">#</span>
+<span class="c1"># To not do any ordering, you would need to provide :order =&gt; nil</span>
+<span class="c1">#</span>
+<span class="no">Person</span><span class="p">.</span><span class="nf">all</span><span class="p">(</span><span class="ss">:fields</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="ss">:job</span><span class="p">],</span> <span class="ss">:unique</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span> <span class="ss">:order</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="ss">:job</span><span class="p">.</span><span class="nf">asc</span><span class="p">])</span>
+<span class="c1"># ...</span>
+<span class="c1"># SELECT "job" FROM "people" GROUP BY "job" ORDER BY "job"</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Note that if you don’t include the primary key in the selected columns,
+you will not be able to modify the returned resources because DataMapper
+cannot know how to persist them. DataMapper will raise
+<code class="highlighter-rouge">DataMapper::ImmutableError</code> if you’re trying to do so nevertheless.</p>
+
+<p>If a <code class="highlighter-rouge">group by</code> isn’t appropriate and you’re rather looking for <code class="highlighter-rouge">select
+distinct</code>, you need to drop down to talking to your datastore directly,
+as shown in the section above.</p>
+
+<h2 id="aggregate-functions">Aggregate functions</h2>
+<p>For the following to work, you need to have
+<a href="http://github.com/datamapper/dm-aggregates">dm-aggregates</a> required.</p>
+
+<h2 id="counting">Counting</h2>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="code"><pre><span class="no">Friend</span><span class="p">.</span><span class="nf">count</span> <span class="c1"># returns count of all friends</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">count</span><span class="p">(</span><span class="ss">:age</span><span class="p">.</span><span class="nf">gt</span> <span class="o">=&gt;</span> <span class="mi">18</span><span class="p">)</span> <span class="c1"># returns count of all friends older then 18</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">count</span><span class="p">(</span><span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="s1">'gender = ?'</span><span class="p">,</span> <span class="s1">'female'</span> <span class="p">])</span> <span class="c1"># returns count of all your female friends</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">count</span><span class="p">(</span><span class="ss">:address</span><span class="p">)</span> <span class="c1"># returns count of all friends with an address (NULL values are not included)</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">count</span><span class="p">(</span><span class="ss">:address</span><span class="p">,</span> <span class="ss">:age</span><span class="p">.</span><span class="nf">gt</span> <span class="o">=&gt;</span> <span class="mi">18</span><span class="p">)</span> <span class="c1"># returns count of all friends with an address that are older then 18</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">count</span><span class="p">(</span><span class="ss">:address</span><span class="p">,</span> <span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="s1">'gender = ?'</span><span class="p">,</span> <span class="s1">'female'</span> <span class="p">])</span> <span class="c1"># returns count of all your female friends with an address</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="minimum-and-maximum">Minimum and Maximum</h2>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="code"><pre><span class="c1"># Get the lowest value of a property</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">min</span><span class="p">(</span><span class="ss">:age</span><span class="p">)</span> <span class="c1"># returns the age of the youngest friend</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">min</span><span class="p">(</span><span class="ss">:age</span><span class="p">,</span> <span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="s1">'gender = ?'</span><span class="p">,</span> <span class="s1">'female'</span> <span class="p">])</span> <span class="c1"># returns the age of the youngest female friends</span>
+<span class="c1"># Get the highest value of a property</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">max</span><span class="p">(</span><span class="ss">:age</span><span class="p">)</span> <span class="c1"># returns the age of the oldest friend</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">max</span><span class="p">(</span><span class="ss">:age</span><span class="p">,</span> <span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="s1">'gender = ?'</span><span class="p">,</span> <span class="s1">'female'</span> <span class="p">])</span> <span class="c1"># returns the age of the oldest female friends</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="average-and-sum">Average and Sum</h2>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="code"><pre><span class="c1"># Get the average value of a property</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">avg</span><span class="p">(</span><span class="ss">:age</span><span class="p">)</span> <span class="c1"># returns the average age of friends</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">avg</span><span class="p">(</span><span class="ss">:age</span><span class="p">,</span> <span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="s1">'gender = ?'</span><span class="p">,</span> <span class="s1">'female'</span> <span class="p">])</span> <span class="c1"># returns the average age of the female friends</span>
+
+<span class="c1"># Get the total value of a property</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="ss">:age</span><span class="p">)</span> <span class="c1"># returns total age of all friends</span>
+<span class="no">Friend</span><span class="p">.</span><span class="nf">sum</span><span class="p">(</span><span class="ss">:age</span><span class="p">,</span> <span class="ss">:conditions</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="s1">'gender = ?'</span><span class="p">,</span> <span class="s1">'female'</span> <span class="p">])</span> <span class="c1"># returns the total age of all female friends</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="multiple-aggregates">Multiple aggregates</h2>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="n">sum</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="no">Friend</span><span class="p">.</span><span class="nf">aggregate</span><span class="p">(</span><span class="ss">:age</span><span class="p">.</span><span class="nf">sum</span><span class="p">,</span> <span class="ss">:all</span><span class="p">.</span><span class="nf">count</span><span class="p">)</span> <span class="c1"># returns the sum of all ages and the count of all friends</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="aggregates-with-order-by">Aggregates with order-by</h2>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="code"><pre><span class="no">Friend</span><span class="p">.</span><span class="nf">aggregate</span><span class="p">(</span><span class="ss">:city</span><span class="p">,</span> <span class="ss">:all</span><span class="p">.</span><span class="nf">count</span><span class="p">)</span> <span class="c1"># returns the city names and the number of friends living in each city</span>
+<span class="c1"># e.g. [['Hamburg', 3], ['New York', 4], ['Rome', 0], ... ]</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+:ET

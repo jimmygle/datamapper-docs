@@ -1,0 +1,287 @@
+I"^f<h1 id="create-save-update-and-destroy">Create, Save, Update and Destroy</h1>
+
+<p>This page describes the basic methods to use when creating, saving, updating and destroying
+resources with DataMapper. Some of DataMapper’s concepts might be confusing to users coming
+from ActiveRecord for example. For this reason, we start with a little background on the usage
+of bang vs. no-bang methods in DataMapper, followed by ways of manipulating the rules DataMapper
+abides when it comes to raising exceptions in case some persistence operation went wrong.</p>
+
+<h2 id="bang-or-no-bang-methods">Bang(!) or no bang methods</h2>
+
+<p>This page is about creating, saving, updating and destroying resources with
+DataMapper. The main methods to achieve these tasks are <code class="highlighter-rouge">#create</code>, <code class="highlighter-rouge">#save</code>,
+<code class="highlighter-rouge">#update</code> and <code class="highlighter-rouge">#destroy</code>. All of these methods have <em>bang method equivalents</em>
+which operate in a slightly different manner. DataMapper follows the general
+ruby idiom when it comes to using bang or non-bang methods. A detailed explanation
+of this idiom can be found at</p>
+
+<p><a href="http://dablog.rubypal.com/2007/8/15/bang-methods-or-danger-will-rubyist">David A. Black’s weblog</a></p>
+
+<p>When you call a non-bang method like <code class="highlighter-rouge">#save</code>, DataMapper will <em>invoke all callbacks</em>
+defined for resources of the model. This means that it will have to <em>load all affected
+resources into memory</em> in order to be able to execute the callbacks on each one of them.
+This can be considered the <em>safe</em> version, without the bang(!). While it sometimes may
+not be the best way to achieve a particular goal (bad performance), it’s as safe as it
+gets. In fact, if <code class="highlighter-rouge">dm-validations</code> are required and active, calling the non-bang version
+of any of these methods, will make sure that all validations are being run too.</p>
+
+<p>Sometimes though, you either don’t need the extra safety you get from <code class="highlighter-rouge">dm-validations</code>,
+or you don’t want any callbacks to be invoked at all. In situations like this, you can use
+the <em>bang(!)</em> versions of the respective methods. You will probably find yourself using these
+<em>unsafe</em> methods when performing internal manipulation of resources as opposed to, say,
+persisting attribute values entered by users (in which case you’d most likely use the <em>safe</em>
+versions). If you call <code class="highlighter-rouge">#save!</code> instead of <code class="highlighter-rouge">#save</code>, <em>no callbacks</em> and <em>no validations</em> will
+be run. DataMapper just assumes that you know what you do. This can also have severe impact
+on the performance of some operations. If you’re calling <code class="highlighter-rouge">#save!</code>, <code class="highlighter-rouge">#update!</code> or <code class="highlighter-rouge">#destroy!</code>
+on a (large) <code class="highlighter-rouge">DataMapper::Collection</code>, this will result in much better performance than calling
+the <em>safe</em> non-bang counterparts. This is because DataMapper won’t load the collection into
+memory because it won’t execute any resource level callbacks or validations.</p>
+
+<p>While the above examples mostly used <code class="highlighter-rouge">#save</code> and <code class="highlighter-rouge">#save!</code> to explain the different behavior,
+the same rules apply for <code class="highlighter-rouge">#create!</code>, <code class="highlighter-rouge">#save!</code>, <code class="highlighter-rouge">#update!</code> and <code class="highlighter-rouge">#destroy!</code>. The <em>safe</em> non-bang
+methods will <em>always execute all callbacks and validations</em>, and the <em>unsafe</em> bang(!) methods
+<em>never will</em>.</p>
+
+<h2 id="raising-an-exception-when-save-fails">Raising an exception when save fails</h2>
+
+<p>By default, datamapper returns <code class="highlighter-rouge">true</code> or <code class="highlighter-rouge">false</code> for all operations manipulating
+the persisted state of a resource (<code class="highlighter-rouge">#create</code>, <code class="highlighter-rouge">#save</code>, <code class="highlighter-rouge">#update</code> and <code class="highlighter-rouge">#destroy</code>).</p>
+
+<p>If you want it to raise exceptions instead, you can instruct datamapper to do so
+either globally, on a per-model, or on a per-instance basis.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="code"><pre><span class="no">DataMapper</span><span class="o">::</span><span class="no">Model</span><span class="p">.</span><span class="nf">raise_on_save_failure</span> <span class="o">=</span> <span class="kp">true</span>  <span class="c1"># globally across all models</span>
+<span class="no">Zoo</span><span class="p">.</span><span class="nf">raise_on_save_failure</span> <span class="o">=</span> <span class="kp">true</span>                <span class="c1"># per-model</span>
+<span class="n">zoo</span><span class="p">.</span><span class="nf">raise_on_save_failure</span> <span class="o">=</span> <span class="kp">true</span>                <span class="c1"># per-instance</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>If DataMapper is told to <code class="highlighter-rouge">raise_on_save_failure</code> it will raise the following when
+any <code class="highlighter-rouge">save</code> operation failed:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="no">DataMapper</span><span class="o">::</span><span class="no">SaveFailureError</span><span class="p">:</span> <span class="no">Zoo</span><span class="c1">#save returned false, Zoo was not saved</span></code></pre></figure>
+
+<p>You can then go ahead and <code class="highlighter-rouge">rescue</code> from this error.</p>
+
+<h2 id="the-example-zoo">The example Zoo</h2>
+
+<p>To illustrate the various methods used in manipulating records, we’ll create,
+save, update and destroy a record.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Zoo</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:id</span><span class="p">,</span>          <span class="no">Serial</span>
+  <span class="n">property</span> <span class="ss">:name</span><span class="p">,</span>        <span class="no">String</span>
+  <span class="n">property</span> <span class="ss">:description</span><span class="p">,</span> <span class="no">Text</span>
+  <span class="n">property</span> <span class="ss">:inception</span><span class="p">,</span>   <span class="no">DateTime</span>
+  <span class="n">property</span> <span class="ss">:open</span><span class="p">,</span>        <span class="no">Boolean</span><span class="p">,</span>  <span class="ss">:default</span> <span class="o">=&gt;</span> <span class="kp">false</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="create">Create</h2>
+
+<p>If you want to create a new resource with some given attributes and then
+save it all in one go, you can use the <code class="highlighter-rouge">#create</code> method.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="n">zoo</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">create</span><span class="p">(</span><span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'The Glue Factory'</span><span class="p">,</span> <span class="ss">:inception</span> <span class="o">=&gt;</span> <span class="no">Time</span><span class="p">.</span><span class="nf">now</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>If the creation was successful, <code class="highlighter-rouge">#create</code> will return the newly created
+<code class="highlighter-rouge">DataMapper::Resource</code>. If it failed, it will return a new resource that
+is initialized with the given attributes and possible default values declared
+for that resource, but that’s not yet saved. To find out wether the creation
+was successful or not, you can call <code class="highlighter-rouge">#saved?</code> on the returned resource. It will
+return <code class="highlighter-rouge">true</code> if the resource was successfully persisted, or <code class="highlighter-rouge">false</code> otherwise.</p>
+
+<p>If you want to either find the first resource matching some given criteria or
+just create that resource if it can’t be found, you can use <code class="highlighter-rouge">#first_or_create</code>.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="n">zoo</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">first_or_create</span><span class="p">(</span><span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'The Glue Factory'</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>This will first try to find a Zoo instance with the given name, and if it fails
+to do so, it will return a newly created Zoo with that name.</p>
+
+<p>If the criteria you want to use to query for the resource differ from the attributes
+you need for creating a new resource, you can pass the attributes for creating a new
+resource as the second parameter to <code class="highlighter-rouge">#first_or_create</code>, also in the form of a <code class="highlighter-rouge">#Hash</code>.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="n">zoo</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">first_or_create</span><span class="p">({</span> <span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'The Glue Factory'</span> <span class="p">},</span> <span class="p">{</span> <span class="ss">:inception</span> <span class="o">=&gt;</span> <span class="no">Time</span><span class="p">.</span><span class="nf">now</span> <span class="p">})</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>This will search for a Zoo named ‘The Glue Factory’ and if it can’t find one, it will
+return a new Zoo instance with its name set to ‘The Glue Factory’ and the inception
+set to what has been Time.now at the time of execution. You can see that for creating
+a new resource, both hash arguments will be merged so you don’t need to specify the
+query criteria again in the second argument <code class="highlighter-rouge">Hash</code> that lists the attributes for creating
+a new resource. However, if you really need to create the new resource with different values
+from those used to query for it, the second <code class="highlighter-rouge">Hash</code> argument will overwrite the first one.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="code"><pre><span class="n">zoo</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">first_or_create</span><span class="p">({</span> <span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'The Glue Factory'</span> <span class="p">},</span> <span class="p">{</span>
+  <span class="ss">:name</span>      <span class="o">=&gt;</span> <span class="s1">'Brooklyn Zoo'</span><span class="p">,</span>
+  <span class="ss">:inception</span> <span class="o">=&gt;</span> <span class="no">Time</span><span class="p">.</span><span class="nf">now</span>
+<span class="p">})</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>This will search for a Zoo named ‘The Glue Factory’ but if it fails to find one, it will
+return a Zoo instance with its name set to ‘Brooklyn Zoo’ and its inception set to the
+value of Time.now at execution time.</p>
+
+<h2 id="save">Save</h2>
+
+<p>We can also create a new instance of the model, update its properties and then
+save it to the data store. The call to <code class="highlighter-rouge">#save</code> will return <code class="highlighter-rouge">true</code> if saving succeeds,
+or <code class="highlighter-rouge">false</code> in case something went wrong.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="code"><pre><span class="n">zoo</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">new</span>
+<span class="n">zoo</span><span class="p">.</span><span class="nf">attributes</span> <span class="o">=</span> <span class="p">{</span> <span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'The Glue Factory'</span><span class="p">,</span> <span class="ss">:inception</span> <span class="o">=&gt;</span> <span class="no">Time</span><span class="p">.</span><span class="nf">now</span> <span class="p">}</span>
+<span class="n">zoo</span><span class="p">.</span><span class="nf">save</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>In this example we’ve updated the attributes using the <code class="highlighter-rouge">#attributes=</code> method,
+but there are multiple ways of setting the values of a model’s properties.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="code"><pre><span class="n">zoo</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'Awesome Town Zoo'</span><span class="p">)</span>                  <span class="c1"># Pass in a hash to the new method</span>
+<span class="n">zoo</span><span class="p">.</span><span class="nf">name</span> <span class="o">=</span> <span class="s1">'Dodgy Town Zoo'</span>                                 <span class="c1"># Set individual property</span>
+<span class="n">zoo</span><span class="p">.</span><span class="nf">attributes</span> <span class="o">=</span> <span class="p">{</span> <span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'No Fun Zoo'</span><span class="p">,</span> <span class="ss">:open</span> <span class="o">=&gt;</span> <span class="kp">false</span> <span class="p">}</span>  <span class="c1"># Set multiple properties at once</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Just like <code class="highlighter-rouge">#create</code> has an accompanying <code class="highlighter-rouge">#first_or_create</code> method, <code class="highlighter-rouge">#new</code> has its
+<code class="highlighter-rouge">#first_or_new</code> counterpart as well. The only difference with <code class="highlighter-rouge">#first_or_new</code> is that
+it returns a new <em>unsaved</em> resource in case it couldn’t find one for the given query
+criteria. Apart from that, <code class="highlighter-rouge">#first_or_new</code> behaves just like <code class="highlighter-rouge">#first_or_create</code> and
+accepts the same parameters. For a detailed explanation of the arguments these two methods
+accept, have a look at the explanation of <code class="highlighter-rouge">#first_or_create</code> in the above section on <em>Create</em>.</p>
+
+<p>It is important to note that <code class="highlighter-rouge">#save</code> will save the complete <em>loaded</em> object graph when called.
+This means that calling <code class="highlighter-rouge">#save</code> on a resource that has relationships of any kind (established
+via <code class="highlighter-rouge">belongs_to</code> or <code class="highlighter-rouge">has</code>) will also save those related resources, <em>if</em> they are <em>loaded</em> at the
+time <code class="highlighter-rouge">#save</code> is being called. Related resources are <em>loaded</em> if they’ve been accessed either
+for <em>read</em> or for <em>write</em> purposes, prior to <code class="highlighter-rouge">#save</code> being called.</p>
+
+<p>NOTE the following behavior of <code class="highlighter-rouge">#save</code> when <code class="highlighter-rouge">dm-validations</code> are in effect!</p>
+
+<p>The symptom that people are seeing is that their records fail to save
+(i.e. <code class="highlighter-rouge">#save</code> returns <code class="highlighter-rouge">false</code>) while calling <code class="highlighter-rouge">#valid?</code> returns <code class="highlighter-rouge">true</code>.
+This is caused when an object has a parent or child that fails validation
+and thus refuses to save, thereby also blocking the object which #save
+was called on from saving.</p>
+
+<h2 id="update">Update</h2>
+
+<p>You can also update a model’s properties and save it with one method call.
+<code class="highlighter-rouge">#update</code> will return <code class="highlighter-rouge">true</code> if the record saves and <code class="highlighter-rouge">false</code> if the save fails,
+exactly like the <code class="highlighter-rouge">#save</code> method.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="n">zoo</span><span class="p">.</span><span class="nf">update</span><span class="p">(</span><span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'Funky Town Municipal Zoo'</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>One thing to note is that the <code class="highlighter-rouge">#update</code> method refuses to update a resource
+in case the resource itself is <code class="highlighter-rouge">#dirty?</code> at this time.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="code"><pre><span class="n">zoo</span><span class="p">.</span><span class="nf">name</span> <span class="o">=</span> <span class="s1">'Brooklyn Zoo'</span>
+<span class="n">zoo</span><span class="p">.</span><span class="nf">update</span><span class="p">(</span><span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'Funky Town Municipal Zoo'</span><span class="p">)</span>
+<span class="c1"># =&gt; DataMapper::UpdateConflictError: Zoo#update cannot be called on a dirty resource</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>You can also use <code class="highlighter-rouge">#update</code> to do mass updates on a model. In the previous examples
+we’ve used <code class="highlighter-rouge">DataMapper::Resource#update</code> to update a single resource. We can also
+use <code class="highlighter-rouge">DataMapper::Model#update</code> which is available as a class method on our models.
+Calling it will update all instances of the model with the same values.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="no">Zoo</span><span class="p">.</span><span class="nf">update</span><span class="p">(</span><span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'Funky Town Municipal Zoo'</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>This will set all Zoo instances’ name property to ‘Funky Town Municipal Zoo’. Internally
+it does the equivalent of:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">.</span><span class="nf">update</span><span class="p">(</span><span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'Funky Town Municipal Zoo'</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>This shows that actually, <code class="highlighter-rouge">#update</code> is also available on any <code class="highlighter-rouge">DataMapper::Collection</code>
+and performs a mass update on that collection when being called. You typically retrieve
+a <code class="highlighter-rouge">DataMapper::Collection</code> from either a call to <code class="highlighter-rouge">SomeModel.all</code> or a call to a
+relationship accessor for any <code class="highlighter-rouge">1:n</code> or <code class="highlighter-rouge">m:n</code> relationship.</p>
+
+<h2 id="destroy">Destroy</h2>
+
+<p>To destroy a record, you simply call its <code class="highlighter-rouge">#destroy</code> method. It will return
+<code class="highlighter-rouge">true</code> or <code class="highlighter-rouge">false</code> depending if the record is successfully deleted or not. Here
+is an example of finding an existing record then destroying it.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="code"><pre><span class="n">zoo</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">get</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">zoo</span><span class="p">.</span><span class="nf">destroy</span>  <span class="c1"># =&gt; true</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>You can also use <code class="highlighter-rouge">#destroy</code> to do mass deletes on a model. In the previous examples
+we’ve used <code class="highlighter-rouge">DataMapper::Resource#destroy</code> to destroy a single resource. We can also
+use <code class="highlighter-rouge">DataMapper::Model#destroy</code> which is available as a class method on our models.
+Calling it will remove all instances of that model from the repository.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="no">Zoo</span><span class="p">.</span><span class="nf">destroy</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>This will delete all Zoo instances from the repository. Internally it does the equivalent of:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="no">Zoo</span><span class="p">.</span><span class="nf">all</span><span class="p">.</span><span class="nf">destroy</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>This shows that actually, <code class="highlighter-rouge">#destroy</code> is also available on any <code class="highlighter-rouge">DataMapper::Collection</code>
+and performs a mass delete on that collection when being called. You typically retrieve
+a <code class="highlighter-rouge">DataMapper::Collection</code> from either a call to <code class="highlighter-rouge">SomeModel.all</code> or a call to a
+relationship accessor for any <code class="highlighter-rouge">1:n</code> or <code class="highlighter-rouge">m:n</code> relationship.</p>
+
+<h2 id="talking-to-your-datastore-directly">Talking to your datastore directly</h2>
+
+<p>Sometimes you may find that you need to execute a non-query task directly against your database. For example, performing bulk inserts might be such a situation.</p>
+
+<p>The following snippet shows how to insert multiple records with only one statement on MySQL. It may not work with other databases but it should give you an idea of how to execute non-query statements against your own database of choice.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="code"><pre><span class="n">adapter</span> <span class="o">=</span> <span class="no">DataMapper</span><span class="p">.</span><span class="nf">repository</span><span class="p">(</span><span class="ss">:default</span><span class="p">).</span><span class="nf">adapter</span>
+<span class="c1"># Insert multiple records with one statement (MySQL)</span>
+<span class="n">adapter</span><span class="p">.</span><span class="nf">execute</span><span class="p">(</span><span class="s2">"INSERT INTO zoos (id, name) VALUES (1, 'Lion'), (2, 'Elephant')"</span><span class="p">)</span>
+<span class="c1"># The interpolated array condition syntax works as well:</span>
+<span class="n">adapter</span><span class="p">.</span><span class="nf">execute</span><span class="p">(</span><span class="s1">'INSERT INTO zoos (id, name) VALUES (?, ?), (?, ?)'</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">'Lion'</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">'Elephant'</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+:ET

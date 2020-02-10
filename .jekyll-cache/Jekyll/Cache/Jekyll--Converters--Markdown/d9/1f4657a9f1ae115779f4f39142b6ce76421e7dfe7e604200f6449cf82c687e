@@ -1,0 +1,121 @@
+I"�<h1 id="hooks-aka-callbacks">Hooks (AKA Callbacks)</h1>
+
+<p>You can define callbacks for any of the model’s explicit lifecycle events:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">create</code></li>
+  <li><code class="highlighter-rouge">update</code></li>
+  <li><code class="highlighter-rouge">save</code></li>
+  <li><code class="highlighter-rouge">destroy</code></li>
+</ul>
+
+<p>Currently, <code class="highlighter-rouge">valid?</code> is not yet included in this list but it could be
+argued that validation is important enough to make it an explicit
+lifecycle event. Future versions of DataMapper will most likely include
+<code class="highlighter-rouge">valid?</code> in the list of explicit lifecycle events.</p>
+
+<p>If you need to hook any of the non-lifecycle methods, DataMapper still
+has you covered tho. It’s also possible to declare advice for any other
+method on both class and instance level. Hooking instance methods can be
+done using <code class="highlighter-rouge">before</code> or <code class="highlighter-rouge">after</code> as described below. In order to hook
+class methods you can use <code class="highlighter-rouge">before_class_method</code> and <code class="highlighter-rouge">after_class_method</code>
+respectively. Both take the same options as their instance level
+counterparts.</p>
+
+<p>However, hooking non-lifecycle methods will be deprecated in future versions
+of DataMapper, which will only provide hooks for the explict lifecycle events.
+Users will then be advised to either roll their own hook system or use any of
+the available gems that offer that kind of functionality.</p>
+
+<h2 id="adding-callbacks">Adding callbacks</h2>
+
+<p>To declare a callback for a specific lifecycle event, define a new method to
+be run when the event is raised, then define your point-cut.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="c1"># key and properties here</span>
+
+  <span class="n">before</span> <span class="ss">:save</span><span class="p">,</span> <span class="ss">:categorize</span>
+
+  <span class="k">def</span> <span class="nf">categorize</span>
+    <span class="c1"># code here</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Alternatively, you can declare the advice during the point-cut by supplying a
+block rather than a symbol representing a method.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="c1"># key and properties here</span>
+
+  <span class="n">before</span> <span class="ss">:save</span> <span class="k">do</span>
+    <span class="c1"># code here</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="throw-halt-in-the-name-of-love">Throw :halt, in the name of love…</h2>
+
+<p>In order to abort advice and prevent the advised method from being called, throw <code class="highlighter-rouge">:halt</code></p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="c1"># ... key and properties here</span>
+
+  <span class="c1"># This record will save properly</span>
+  <span class="n">before</span> <span class="ss">:save</span> <span class="k">do</span> <span class="o">|</span><span class="n">post</span><span class="o">|</span>
+    <span class="kp">true</span>
+  <span class="k">end</span>
+
+  <span class="c1"># But it will not be destroyed</span>
+  <span class="n">before</span> <span class="ss">:destroy</span> <span class="k">do</span> <span class="o">|</span><span class="n">post</span><span class="o">|</span>
+    <span class="kp">throw</span> <span class="ss">:halt</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>Remember, if you <code class="highlighter-rouge">throw :halt</code> inside an <code class="highlighter-rouge">after</code> advice, the advised method will
+have already ran and returned. Because of this, the <code class="highlighter-rouge">after</code> advice will be the
+only thing halted.</p>
+:ET

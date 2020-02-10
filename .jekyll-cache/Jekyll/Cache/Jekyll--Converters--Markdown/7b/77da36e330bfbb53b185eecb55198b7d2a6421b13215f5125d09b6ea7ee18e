@@ -1,0 +1,220 @@
+I"�%<h1 id="using-git">Using Git</h1>
+
+<p>The DataMapper project uses the Git SCM. Committers
+need to use git to commit their code directly to the main repository.</p>
+
+<p>This page contains information on getting Git installed, getting source code
+with Git, and steps for working with Git.</p>
+
+<p>Also, see these references:</p>
+
+<ul>
+  <li><a href="http://git-scm.com/course/svn.html">Git - SVN Crash Course</a></li>
+  <li><a href="http://www.kernel.org/pub/software/scm/git/docs/everyday.html">Everyday Git With 20 Commands Or So</a></li>
+</ul>
+
+<h2 id="getting-git-for-your-system">Getting Git for Your System</h2>
+
+<p>You can use an earlier version, but 1.5.x is definitely recommended.</p>
+
+<ul>
+  <li>MacPorts has <code class="highlighter-rouge">git-core</code></li>
+  <li>Debian has <code class="highlighter-rouge">git-core</code>; (If you’re using Etch, you can get a recent Git version from Backports <a href="http://backports.org/dokuwiki/doku.php?id=instructions">http://backports.org/dokuwiki/do…</a>)</li>
+  <li>Get the source at <a href="http://git-scm.com/">http://git-scm.com/</a>.</li>
+</ul>
+
+<h2 id="setup">Setup</h2>
+
+<p>Configure Git with your proper name and email. This will display when you submit
+changes to the DataMapper repository.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">git config  <span class="nt">--global</span> user.name <span class="s2">"My Name"</span>
+git config  <span class="nt">--global</span> user.email <span class="s2">"my@email"</span></code></pre></figure>
+
+<p>If you prefer to use different credentials for different projects, you can also
+configure the above for a single repository only. See the git documentation.</p>
+
+<h2 id="formatting-git-commit-messages">Formatting Git Commit Messages</h2>
+
+<p>In general, use an editor to create your commit messages rather than passing
+them on the command line. The format should be:</p>
+
+<ul>
+  <li>A hard wrap at 72 characters</li>
+  <li>A single, short, summary of the commit</li>
+  <li>Followed by a single blank line</li>
+  <li>Followed by supporting details</li>
+</ul>
+
+<p>The supporting details could be a bulleted enumeration or an explanatory
+paragraph. The single summary line helps folks reviewing commits. An example
+commit:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">Fixes <span class="k">for </span>Module#make_my_day <span class="k">return </span>values.
+
+<span class="k">*</span> Return nil when passed <span class="s1">':('</span>
+<span class="k">*</span> Return <span class="nb">true </span>when passed <span class="s1">':)'</span>
+<span class="k">*</span> Updated specs <span class="k">for</span> <span class="c">#make_my_day for nil argument case</span>
+<span class="k">*</span> Updated CI excludes.</code></pre></figure>
+
+<h2 id="getting-the-code">Getting the Code</h2>
+
+<p>DataMapper is hosted at <a href="http://github.com/datamapper/">GitHub</a>.
+Getting the code is easy once you have git installed but is slightly different
+depending on your access. In both cases that exact command will put the
+repository in a local directory called dm. You can give it a different name just
+by appending it to the command.</p>
+
+<h3 id="new-users-and-developers">New Users and Developers</h3>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">git clone git://github.com/datamapper/dm-core.git</code></pre></figure>
+
+<h3 id="committers-with-commit-bit">Committers with Commit Bit</h3>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">git clone git@github.com/datamapper/dm-core.git</code></pre></figure>
+
+<h2 id="git-workflow">Git Workflow</h2>
+
+<p>Working with Git is significantly different than working with
+SVN. In particular, although similar, git pull is not svn
+update, git push is not svn commit, and git add is not svn add. If you are a
+SVN user, be sure to read the man pages for the
+different git commands.&lt;/p&gt;</p>
+
+<p>The following workflow is recommended by Rein and is the guideline for
+contributing code to DataMapper.</p>
+
+<ol>
+  <li>
+    <p>Create a local working copy of the source code (we did this earlier.)</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    <span class="c"># See above for the exact invocation</span>
+    </code></pre></figure>
+
+  </li>
+
+  <li>
+    <p>Change to the newly created directory that contains the local working copy. (Substitute the directory if you created it with a different name, obviously.)</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">   <span class="nb">cd </span>dm
+   </code></pre></figure>
+
+  </li>
+
+  <li>
+    <p>Create a branch for your work. It is important that you do your work in a local branch, rather than master.</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    git checkout <span class="nt">-b</span> new_feature
+    </code></pre></figure>
+
+  </li>
+
+  <li>
+    <p>Edit the code and test your changes. Then commit to your local working copy.</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    git add <span class="nb">.</span>
+    git commit
+    </code></pre></figure>
+
+    </li>
+
+  <li>
+    <p>When you are ready to send your local changes back to the DataMapper repository, you first need to ensure that your local copy is up-to-date. First, ensure you have committed your local changes. Then switch from your topic branch to the master branch.</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    git checkout master
+    </code></pre></figure>
+
+  </li>
+
+  <li>
+    <p>Update your local copy with changes from the DataMapper repository</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    git pull origin master <span class="nt">--rebase</span>
+    </code></pre></figure>
+
+  </li>
+
+  <li>
+    <p>Switch back to your topic branch and integrate any new changes. The git rebase command will save your changes away, update the topic branch, and then reapply them.</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    git checkout new_feature
+    git rebase master
+    </code></pre></figure>
+
+    <p>Warning! If you have shared the topic branch publicly, you must use</p>
+
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    git merge master
+    </code></pre></figure>
+
+    <p>Rebase causes the commit layout to change and will confuse anyone
+    you&#8217;ve shared this branch with.</p> </li>
+
+  <li>
+    <p>If there are conflicts applying your changes during the git rebase command, fix them and use the following to finish applying them</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    git rebase <span class="nt">--continue</span>
+    </code></pre></figure>
+
+  </li>
+
+  <li>
+    <p>Now, switch back to the master branch and merge your changes from the topic branch</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    git checkout master
+    git merge new_feature
+    </code></pre></figure>
+
+  </li>
+
+  <li>
+    <p>You might want to check that your commits ended up as you intended. To do so, you can have a look at the log</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    git log
+    </code></pre></figure>
+
+  </li>
+
+  <li>
+    <p>Get your changes in the main repository. If you have commit rights, you can just use the git push command. Otherwise, see the section below for information on creating a set of patches to send.</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    git push origin master
+    </code></pre></figure>
+
+  </li>
+
+  <li>
+    <p>At this point, you can delete the branch if you like.</p>
+    
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">    git branch <span class="nt">-d</span> new_feature
+    </code></pre></figure>
+
+  </li>
+</ol>
+
+<h2 id="patches-git-format-patch">Patches: git-format-patch</h2>
+
+<p>If you are a new committer (or want to create a patch instead of directly
+pushing the code for some other reason) you should create a patch file for your
+commits. The patch file should be then attached to a ticket on Lighthouse. You
+can also send the patch to the mailing list but please use the ticket tracker if
+at all possible. Either way, the patch file(s) should be created using Git.</p>
+
+<p>First, make your changes as detailed below and then use the git format-patch
+command to create the patch files. Usually using the command is as simple as
+specifying the commits you want to create patches for, and that is done in one
+of two ways: by giving a range of commits or a starting point.</p>
+
+<p>For our purposes, the simplest way to create a patch is to begin at the end of
+step 8 above (after you have rebased your branch) and then, instead of
+merging:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">git format-patch master..</code></pre></figure>
+
+<p>This will create a separate patch file for each commit in your working branch
+that is not in master, named <code class="highlighter-rouge">[number]-[first line of commit message].patch</code>. You
+can then attach these to a ticket (or e-mail them).</p>
+
+<p>You can also inspect your changes using <code class="highlighter-rouge">git log master..</code> or <code class="highlighter-rouge">git diff master..</code>
+to ensure that the patches will be generated correctly if you are uncertain.</p>
+:ET

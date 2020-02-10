@@ -1,0 +1,19 @@
+I"Œ<h1 id="development">Development</h1>
+
+<p>Contributing to DataMapper might seem a bit intimidating at first. The variety
+of available gems and github repositories might appear to be an
+impenetrable jungle. Fear not! The available <a href="http://github.com/datamapper/dm-dev">thor tasks</a>
+actually make it really easy to solidly test any kind of patch for DataMapper.</p>
+
+<h2 id="coding-conventions-and-considerations">Coding Conventions and Considerations</h2>
+
+<p>When contributing any code to DataMapper, please follow these guidelines.</p>
+
+<ul>
+  <li>Spec first. Spec thoroughly. (DataMapper is written with <a href="http://rspec.info/">RSpec</a>)</li>
+  <li>Parentheses around parameter lists for methods</li>
+  <li>Two space indent - not tabs!</li>
+  <li>Write optimal code, not magic code</li>
+  <li>Documentation is required (use the <a href="/docs/">official documentation style</a>)</li>
+</ul>
+:ET

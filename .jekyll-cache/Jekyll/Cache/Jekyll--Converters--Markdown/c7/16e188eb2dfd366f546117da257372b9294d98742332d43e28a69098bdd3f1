@@ -1,0 +1,131 @@
+I"�"<h1 id="miscellaneous-features">Miscellaneous Features</h1>
+
+<p>DataMapper comes loaded features, many of which other ORMs require external
+libraries for.</p>
+
+<h2 id="single-table-inheritance">Single Table Inheritance</h2>
+
+<p>Many ORMs support Single Table Inheritance and DataMapper is no different. In
+order to declare a model for Single Table Inheritance, define a property with
+the data-type of <a href="http://rubydoc.info/github/datamapper/dm-core/master/DataMapper/Property/Discriminator">Types::Discriminator</a>.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="code"><pre><span class="k">class</span> <span class="nc">Person</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:name</span><span class="p">,</span> <span class="no">String</span>
+  <span class="n">property</span> <span class="ss">:job</span><span class="p">,</span>  <span class="no">String</span><span class="p">,</span>        <span class="ss">:length</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="o">..</span><span class="mi">255</span>
+  <span class="n">property</span> <span class="ss">:type</span><span class="p">,</span> <span class="no">Discriminator</span>
+  <span class="o">...</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">Male</span>   <span class="o">&lt;</span> <span class="no">Person</span><span class="p">;</span> <span class="k">end</span>
+<span class="k">class</span> <span class="nc">Father</span> <span class="o">&lt;</span> <span class="no">Male</span><span class="p">;</span>   <span class="k">end</span>
+<span class="k">class</span> <span class="nc">Son</span>    <span class="o">&lt;</span> <span class="no">Male</span><span class="p">;</span>   <span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">Woman</span>    <span class="o">&lt;</span> <span class="no">Person</span><span class="p">;</span> <span class="k">end</span>
+<span class="k">class</span> <span class="nc">Mother</span>   <span class="o">&lt;</span> <span class="no">Woman</span><span class="p">;</span>  <span class="k">end</span>
+<span class="k">class</span> <span class="nc">Daughter</span> <span class="o">&lt;</span> <span class="no">Woman</span><span class="p">;</span>  <span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>When DataMapper sees your <code class="highlighter-rouge">type</code> column declared as type
+<a href="http://rubydoc.info/github/datamapper/dm-core/master/DataMapper/Property/Discriminator">Types::Discriminator</a>, it will automatically insert the class name of
+the object you’ve created and later instantiate that row as that class. It also
+supports deep inheritance, so doing Woman.all will select all women, mothers,
+and daughters (and deeper inherited classes if they exist).</p>
+
+<h2 id="timezone-handling">Timezone handling</h2>
+
+<p>Currently, DataMapper has no builtin support for working with timezones
+particularly. This means that time properties will always be stored and
+retrieved in the timezone the datastore is set to. There is no API to
+explicitly manipulate timezones.</p>
+
+<p>Have a look at <a href="http://github.com/hassox/dm-zone-types">dm-zone-types</a>
+for more elaborate timezone handling support.</p>
+
+<h2 id="paranoia">Paranoia</h2>
+
+<p>Sometimes…most times…you don’t <em>really</em> want to destroy a row in the
+database, you just want to mark it as deleted so that you can restore it later
+if need be. This is aptly-named Paranoia and DataMapper has basic support for
+this baked right in. Just declare a property and assign it a type of
+<a href="http://rubydoc.info/github/datamapper/dm-types/master/DataMapper/Property/ParanoidDateTime">Types::ParanoidDateTime</a> or <a href="http://rubydoc.info/github/datamapper/dm-types/master/DataMapper/Property/ParanoidBoolean">Types::ParanoidBoolean</a>:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="n">property</span> <span class="ss">:deleted_at</span><span class="p">,</span> <span class="no">ParanoidDateTime</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<h2 id="multiple-data-store-connections">Multiple Data-Store Connections</h2>
+
+<p>DataMapper sports a concept called a context which encapsulates the data-store
+context in which you want operations to occur. For example, when you setup a
+connection in <a href="/getting-started.html">getting-started</a>, you were defining a
+context known as <code class="highlighter-rouge">:default</code></p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre>  <span class="no">DataMapper</span><span class="p">.</span><span class="nf">setup</span><span class="p">(</span><span class="ss">:default</span><span class="p">,</span> <span class="s1">'mysql://localhost/dm_core_test'</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>If you supply another context name, you will now have 2 database contexts with
+their own unique loggers, connection pool, identity map….one default context
+and one named context.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+</pre></td><td class="code"><pre><span class="no">DataMapper</span><span class="p">.</span><span class="nf">setup</span><span class="p">(</span><span class="ss">:external</span><span class="p">,</span> <span class="s1">'mysql://someother_host/dm_core_test'</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>To use one context rather than another, simply wrap your code block inside a
+<code class="highlighter-rouge">repository</code> call. It will return whatever your block of code returns.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="code"><pre><span class="no">DataMapper</span><span class="p">.</span><span class="nf">repository</span><span class="p">(</span><span class="ss">:external</span><span class="p">)</span> <span class="p">{</span> <span class="no">Person</span><span class="p">.</span><span class="nf">first</span> <span class="p">}</span>
+<span class="c1"># hits up your :external database and retrieves the first Person</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>This will use your connection to the <code class="highlighter-rouge">:external</code> data-store and the first Person
+it finds. Later, when you call <code class="highlighter-rouge">.save</code> on that person, it’ll get saved back to
+the <code class="highlighter-rouge">:external</code> data-store; An object is aware of what context it came from and
+should be saved back to.</p>
+
+<p>NOTE that currently you <strong>must</strong> setup a <code class="highlighter-rouge">:default</code> repository to work
+with DataMapper (and to be able to use additional differently named
+repositories). This might change in the future.</p>
+
+<h2 id="chained-associations">Chained Associations</h2>
+
+<p>Say you want to find all of the animals in a zoo, but Animal belongs to Exhibit
+which belongs to Zoo. Other ORMs solve this problem by providing a means to
+describe the double JOINs into the retrieval call for Animals. ActiveRecord
+specifically will let you specify JOINs in a hash-of-hashes syntax which will
+make most developers throw up a little in their mouths.</p>
+
+<p>DataMapper’s solution is to let you chain association calls:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="code"><pre><span class="n">zoo</span> <span class="o">=</span> <span class="no">Zoo</span><span class="p">.</span><span class="nf">first</span>
+<span class="n">zoo</span><span class="p">.</span><span class="nf">exhibits</span><span class="p">.</span><span class="nf">animals</span>  <span class="c1"># retrieves all animals for all exhibits for that zoo</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>This has great potential for browsing collections of content, like browsing all
+blog posts’ comments by category or tag. At present, chaining beyond 2
+associations is still experimental.</p>
+
+:ET

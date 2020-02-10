@@ -1,0 +1,48 @@
+I"?<h1 id="common-pitfalls">Common Pitfalls</h1>
+
+<p>Below is a list of common problems that someone new to DataMapper will
+encounter, along with work-arounds or solutions if possible.</p>
+
+<h2 id="implicit-string-property-length">Implicit String property length</h2>
+
+<p>When declaring a String property, DataMapper will add an implicit limit of 50
+characters if no limit is explicitly declared.</p>
+
+<p>For example, the following two models will have the same behaviour:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><table class="rouge-table"><tbody><tr><td class="gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre></td><td class="code"><pre><span class="c1"># with an implicit length</span>
+<span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:title</span><span class="p">,</span> <span class="no">String</span>
+<span class="k">end</span>
+
+<span class="c1"># with an explicit length</span>
+<span class="k">class</span> <span class="nc">Post</span>
+  <span class="kp">include</span> <span class="no">DataMapper</span><span class="o">::</span><span class="no">Resource</span>
+
+  <span class="n">property</span> <span class="ss">:title</span><span class="p">,</span> <span class="no">String</span><span class="p">,</span> <span class="ss">:length</span> <span class="o">=&gt;</span> <span class="mi">50</span>
+<span class="k">end</span>
+</pre></td></tr></tbody></table></code></pre></figure>
+
+<p>The reason for this default is that DataMapper needs to know the underlying
+column constraints in order to add validations from the property definitions.
+Databases will often choose their own arbitrary length constraints if one is not
+declared (often defaulting to 255 chars). We choose something a bit more
+restrictive as a default because we wanted to encourage peolpe to declare
+it explicitly in their model, rather than relying on DM or the DB choosing
+an arbitrary limit.</p>
+:ET

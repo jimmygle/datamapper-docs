@@ -1,0 +1,189 @@
+I"�)<h1 id="dm-more">DM More</h1>
+
+<p>DataMapper is intended to have a lean and minimalistic core, which provides the
+minimum necessary features for an ORM. It’s also designed to be easily
+extensible, so that everything you want in an ORM can be added in with a minimum
+of fuss. It does this through plugins, which provide everything from
+automatically updated timestamps to factories for generating DataMapper
+resources. The biggest collection of these plugins is in dm-more, which isn’t to
+say that there’s anything wrong with plugins which aren’t included in dm-more –
+it will never house all the possible plugins.</p>
+
+<p>This page gives an overview of the plugins available in dm-more, loosely
+categorized by what type of plugin they are.</p>
+
+<h2 id="resource-plugins">Resource Plugins</h2>
+
+<p>These plugins modify the behavior of all resources in an application, adding new
+functionality to them, or providing easier ways of doing things.</p>
+
+<h3 id="dm-validations"><a href="http://github.com/datamapper/dm-validations">dm-validations</a></h3>
+
+<p>This provides validations for resources. The plugin both defines automatic
+validations based on the properties specified and also allows assignment of
+manual validations. It also supports contextual validation, allowing a resource
+to be considered valid for some purposes but not others.</p>
+
+<h3 id="dm-timestamps"><a href="/docs/dm_more/timestamps.html">dm-timestamps</a></h3>
+
+<p>This defines callbacks on the common timestamp properties, making them
+auto-update when the models are created or updated. The targeted properties are
+<code class="highlighter-rouge">:created_at</code> and <code class="highlighter-rouge">:updated_at</code> for DateTime properties and <code class="highlighter-rouge">:created_on</code> and
+<code class="highlighter-rouge">:updated_on</code> for Date properties.</p>
+
+<h3 id="dm-aggregates"><a href="/docs/dm_more/dm-aggregates.html">dm-aggregates</a></h3>
+
+<p>This provides methods for database calls to aggregate functions such as <code class="highlighter-rouge">count</code>,
+<code class="highlighter-rouge">sum</code>, <code class="highlighter-rouge">avg</code>, <code class="highlighter-rouge">max</code> and <code class="highlighter-rouge">min</code>. These aggregate functions are added to both
+collections and Models.</p>
+
+<h3 id="dm-types"><a href="/docs/dm_more/types.html">dm-types</a></h3>
+
+<p>This provides several more allowable property types. <code class="highlighter-rouge">Enum</code> and <code class="highlighter-rouge">Flag</code> allow a
+field to take a few set values. <code class="highlighter-rouge">URI</code>, <code class="highlighter-rouge">FilePath</code>, <code class="highlighter-rouge">Regexp</code>, <code class="highlighter-rouge">EpochTime</code> and
+<code class="highlighter-rouge">BCryptHash</code> save database representations of the classes, restoring them on
+retrieval. <code class="highlighter-rouge">Csv</code>, <code class="highlighter-rouge">Json</code> and <code class="highlighter-rouge">Yaml</code> store data in the field in the serial
+formats and de-serialize them on retrieval.</p>
+
+<h3 id="dm-serializer"><a href="http://github.com/datamapper/dm-serializer">dm-serializer</a></h3>
+
+<p>This provides ‘<code class="highlighter-rouge">to_*</code>’ methods which take a resource and convert it to a serial
+format to be restored later. Currently the plugin provides <code class="highlighter-rouge">to_xml</code>, <code class="highlighter-rouge">to_yaml</code>
+and <code class="highlighter-rouge">to_json</code></p>
+
+<h3 id="dm-constraints"><a href="http://github.com/datamapper/dm-constraints">dm-constraints</a></h3>
+
+<p>This plugin provides foreign key constrains on has n relationships for Postgres
+and MySQL adapters.</p>
+
+<h3 id="dm-adjust"><a href="http://github.com/datamapper/dm-adjust">dm-adjust</a></h3>
+
+<p>This plugin allows properties on resources, collections and models to
+incremented or decremented by a fixed amount.</p>
+
+<h2 id="is-plugins">is Plugins</h2>
+
+<p>These plugins make new functionality available to models, which can be accessed
+via the <code class="highlighter-rouge">is</code> method, for example <code class="highlighter-rouge">is :list</code>. These make the models behave in new
+ways.</p>
+
+<h3 id="dm-is-list"><a href="http://github.com/datamapper/dm-is-list">dm-is-list</a></h3>
+
+<p>The model acts as an item on a list. It has a position, and there are methods
+defined for moving it up or down the list based on this position. The position
+can also be scoped, for example on a user id.</p>
+
+<h3 id="dm-is-tree"><a href="http://github.com/datamapper/dm-is-tree">dm-is-tree</a></h3>
+
+<p>The model acts as a node of a tree. It gains methods for querying parents and
+children as well as all the nodes of the current generation, the trail of
+ancestors to the root node and the root node itself.</p>
+
+<h3 id="dm-is-nested_set"><a href="http://github.com/datamapper/dm-is-nested_set">dm-is-nested_set</a></h3>
+
+<p>The model acts as an item in a ‘nested set’. This might be used for some kind of
+categorization system, or for threaded conversations on a forum. The advantage
+this has over a tree is that is easy to fetch all the descendants or ancestors
+of a particular set in one query, not just the next generation. Added to a
+nested set is more complex under the hood, but the plugin takes care of this for
+you.</p>
+
+<h3 id="dm-is-versioned"><a href="http://github.com/datamapper/dm-is-versioned">dm-is-versioned</a></h3>
+
+<p>The model is versioned. When it is updated, instead of the previous version
+being lost in the mists of time, it is saved in a subsidiary table, so that it
+can be restored later if needed.</p>
+
+<h3 id="dm-is-state_machine"><a href="http://github.com/datamapper/dm-is-state_machine">dm-is-state_machine</a></h3>
+
+<p>The model acts as a state machine. Instead of a column being allowed to take any
+value, it is used to track the state of the machine, which is updated through
+events that cause transitions. For example, this might step a model through a
+sign-up process, or some other complex task.</p>
+
+<h3 id="dm-is-remixable"><a href="http://github.com/datamapper/dm-is-remixable">dm-is-remixable</a></h3>
+
+<p>The model becomes ‘remixable’. It can then be included (or remixed) in other
+models, which defines a new table to hold the remixed model and can have other
+properties or methods defined on it. It’s something like class table inheritance
+for relationships :)</p>
+
+<h2 id="adapters">Adapters</h2>
+
+<p>These plugins provide new adapters for different storage schemes, allowing them
+to be used to store resources, instead of the more conventional relational
+database store.</p>
+
+<h3 id="dm-rest-adapter"><a href="http://github.com/datamapper/dm-rest-adapter">dm-rest-adapter</a></h3>
+
+<p>An adapter for a XML based REST-backed storage scheme. All the usual DataMapper
+operations are performed as HTTP GETs, POSTs, UPDATEs and DELETEs, operating on
+the URIs of the resources.</p>
+
+<h2 id="integration-plugins">Integration Plugins</h2>
+
+<p>These plugins are designed to ease integration with other libraries, currently
+just web frameworks.</p>
+
+<h3 id="merb_datamapper"><a href="http://github.com/merb/merb_datamapper">merb_datamapper</a></h3>
+
+<p>Integration with the <a href="http://www.merbivore.com/">merb</a> web framework.
+The plugin takes care of setting up the DataMapper connection when the framework
+starts, provides several useful rake tasks as well as generators for Models,
+ResourceControllers and Migrations.</p>
+
+<h3 id="rails_datamapper"><a href="http://github.com/datamapper/rails_datamapper">rails_datamapper</a></h3>
+
+<p>Integration with <a href="http://rubyonrails.org/">Rails 2.x</a>. It provides a
+Model generator and also takes care of connecting to the data-store through
+DataMapper.</p>
+
+<h3 id="dm-rails"><a href="http://github.com/datamapper/dm-rails">dm-rails</a></h3>
+
+<p>Integration with <a href="http://rubyonrails.org/">Rails 3.x</a>. It provides a
+model and migration generators, takes care of connecting to the data-store through
+DataMapper and supports <a href="http://github.com/rspec/rspec">RSpec2</a>.</p>
+
+<h2 id="utility-plugins">Utility Plugins</h2>
+
+<p>These provide useful functionality, though are unlikely to be used by every
+project or assist more with development than production use.</p>
+
+<h3 id="dm-sweatshop"><a href="http://github.com/datamapper/dm-sweatshop">dm-sweatshop</a></h3>
+
+<p>A model factory for DataMapper, supporting the creation of random models for
+specing or to fill an application for development. Properties can be picked at
+random or made to conform to a variety of regular expressions. dm-sweatshop also
+understands has n relationships and can assign a random selection of child
+models to a parent.</p>
+
+<h3 id="dm-migrations"><a href="http://github.com/datamapper/dm-migrations">dm-migrations</a></h3>
+
+<p>Migrations for DataMapper, allowing modification of the database schema with
+more control than <code class="highlighter-rouge">auto_migrate!</code> and <code class="highlighter-rouge">auto_upgrade!</code>. Migrations can be written
+to create, modify and drop tables and columns. In addition, the plugin provides
+support for specing migrations and verifying they perform as intended.</p>
+
+<h3 id="dm-observer"><a href="http://github.com/datamapper/dm-observer">dm-observer</a></h3>
+
+<p>This plugin eases operations involving models across multiple repositories,
+allowing wrapping in a <code class="highlighter-rouge">repository(:foo)</code> block to be replaced with a
+<code class="highlighter-rouge">MyModel(:foo).some_method</code> call.</p>
+
+<p>Observers watch other classes, doing things when certain operations are
+performed on the remote class. This can be anything, but they are commonly used
+for writing logs or notifying via email or xmpp when a critical operation has
+occurred.</p>
+
+<h3 id="dm-cli"><a href="http://github.com/datamapper/dm-cli">dm-cli</a></h3>
+
+<p>The <code class="highlighter-rouge">dm</code> executable is a DataMapper optimized version of <code class="highlighter-rouge">irb</code>. It automatically
+connects to a data-store based on the arguments passed to it and supports
+easy loading of DataMapper plugins, models from a directory as well as reading
+connection information from a YAML configuration file.</p>
+
+<h3 id="dm-ar-finders"><a href="http://github.com/datamapper/dm-ar-finders">dm-ar-finders</a></h3>
+
+<p>ActiveRecord style syntax for DataMapper. This includes functionality such as
+<code class="highlighter-rouge">find_by_name</code>, <code class="highlighter-rouge">find_or_create</code> and <code class="highlighter-rouge">find_all_by_title</code>.</p>
+:ET
