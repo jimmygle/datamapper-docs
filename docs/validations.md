@@ -348,7 +348,7 @@ Setting Properties Before Validation
 It is sometimes necessary to set properties before a resource is saved or
 validated. Perhaps a required property can have a default value set from other
 properties or derived from the environment. To set these properties, a `before :valid?`
-<a href="/docs/callbacks">hook</a> should be used.
+<a href="/datamapper-docs/docs/callbacks">hook</a> should be used.
 
 {% highlight ruby linenos %}
   class Article
